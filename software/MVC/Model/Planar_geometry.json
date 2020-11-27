@@ -1,0 +1,8 @@
+{
+    "root_chord":10,
+    "tip_chord" : 8,
+    "span":100,
+    "leading_angle":10,
+    "trailing_angle":0
+
+}
