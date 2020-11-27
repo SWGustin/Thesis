@@ -1,4 +1,4 @@
-class LVE:
+class Switch:
     def __init__(self):
         self._dutyCycle = 0
         self._frequency = 0
@@ -36,17 +36,37 @@ class BasisVectorError(Exception):
     pass
 
 class PEL:
-    def __init__(self,noOfLVE):
-        if noOfLVE < 3:
-            raise BasisVectorError("The minimum number of LVE for a additively complete space is 3")
-        self._noOfLVE = noOfLVE
-        self._side_length = float('inf')
-        self._gap = float('inf')
+    def __init__(self,noOfSwitches, totalWidth, primaryDirection = 0):
+        if noOfSwitches < 3:
+            raise BasisVectorError("The minimum number of Low Voltage Elements for a additively complete space is 3")
+        self._noOfSwitches = noOfSwitches
+        self._totalWidth = totalWidth
         self._angle = 0
         self._dutyCycle = 0
-        self._primaryDirection = 0
-        self._LVEs = [LVE() for _ in range(self._noOfLVE)]
-        
+        self._primaryDirection = primaryDirection
+        self._Switches = [Switch() for _ in range(self._noOfSwitches)]
+        self._cardinalDirections = [(360/self._noOfSwitches * i) + self._primaryDirection for i in range(self._noOfSwitches)]
+    
+    @property
+    def noOfSwitches(self):
+        return self._noOfSwitches
+
+    @property
+    def totalWidth(self):
+        return self._totalWidth
+
+    @property
+    def primaryDirection(self):
+        return self._primaryDirection
+
+    @property
+    def Switches(self):
+        return self._Switches
+
+    @property
+    def cardinalDirections(self):
+        return self._cardinalDirections
+
     @property
     def dutyCycle(self):
         return self._dutyCycle
@@ -56,33 +76,12 @@ class PEL:
         self._dutyCycle = min(max(0,dc),100)
 
     @property
-    def noOfLVE(self):
-        return self._noOfLVE
-
-    @noOfLVE.setter
-    def noOfLVE(self, noOfLVE):
-        self._noOfLVE = noOfLVE
-
-    @property
     def angle(self):
         return self._angle
 
     @angle.setter
     def angle(self, angle):
         self._angle = angle % 360
+
         #TODO: updateto include handling of primary direction and for actioning PELS
-    
-    @property
-    def primaryDirection(self):
-        return self._primaryDirection
-    
-    @primaryDirection.setter
-    def primaryDirection(self, pd):
-        self._primaryDirection = pd % 360
-
-    @property
-    def LVEs(self):
-        return self._LVEs
-
-    #TODO: add properties and setter for un_added variables above
     
