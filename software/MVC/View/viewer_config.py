@@ -3,8 +3,8 @@ refreshRate = 10
 
 displayTitle = ''
 screenSize = (800,600)
-bgColour = 'white'
-offColour = 'blue'
-onColour = 'red'
+bgColour = (255,255,255)
+offColour = (0,0,255)
+onColour = (255,0,0)
 arrowWidth = 1
 maxArrowLength = 20

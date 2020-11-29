@@ -38,9 +38,9 @@ class Switch:
         self._basisVector = vector
 
 class PEL:
-    def __init__(self,noOfSwitches, totalWidth, primaryDirection = 0):
+    def __init__(self, noOfSwitches, totalWidth, primaryDirection = 0):
         if noOfSwitches < 3:
-            raise BasisVectorError("The minimum number of Low Voltage Elements for a additively complete space is 3")
+            raise BasisVectorError("The minimum number of Low Voltage Elements for a additively closed space is 3")
         self._noOfSwitches = noOfSwitches
         self._totalWidth = totalWidth
         self._angle = 0
@@ -88,32 +88,34 @@ class PEL:
         #TODO: updateto include handling of primary direction and for actioning PELS
 
 class ArPEl:
-    def __init__(self):
+    def __init__(self, base_chord, tip_chord, span, leading_angle):
         self._base_chord = 0
         self._tip_chord = 0
         self._span = 0
         self._leading_angle = 0
         self._pel_spacing = float('inf')
-        self._geometry = []
         self._pels = [[]]
+        self._geometry = [(0,0)]
+
+        # get corners of basic wing
+        tip_offset = span*math.tan(math.radians(leading_angle))
+        self._geometry.append((span, tip_offset))
+        self._geometry.append((span,self._geometry[1][1]+tip_chord))
+        self._geometry.append((0,base_chord))
+
+        # build array of np elements
+        max_width = span/2
+        max_length = max(self._base_chord, tip_offset + tip_chord)
+
+        self.state_array = np.zeros(max_width, max_length, 3)
+
 
     @property
     def geometry(self):
         return self._geometry
-
-    # @geometry.setter
-    # def geometry(self,points):
-    #     self._geometry = [[(x,y) for x,y in point ]for point in points]
         
-    @geometry.setter
-    def geometry(self, values):
-        try:
-            base_chord, tip_chord, span, leading_angle = values
-        except ValueError:
-            raise ValueError("Pass all required values")
-        self._geometry = [(0,0)]
-        self._geometry.append((span, span*math.tan(math.radians(leading_angle))))
-        self._geometry.append((span,self._geometry[1][1]+tip_chord))
-        self._geometry.append((0,base_chord))
-
     #TODO: add unadded setters and calculate array of pels   
+
+    def __repr__(self):
+        print(self.state_array.rms())
+

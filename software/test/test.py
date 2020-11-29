@@ -1,4 +1,9 @@
-from Model import parts, ArPEl
+import sys, os
+
+
+
+
+from Model import model
 from View import viewer
 from Controller import controller
 from collections import namedtuple
@@ -37,8 +42,8 @@ print("-------------------")
 print("passed all PEl tests")
 
 wing_geometry = namedtuple('wing_geometry', ['root_chord', 'tip_chord', 'span', 'leading_angle'])
-arpel_test = ArPEl.ArPEl()
+arpel_test = parts.ArPEl()
 wing = wing_geometry(10,7,5,5)
 arpel_test.geometry = wing
 
-print(arpel_test.geometry)
+print(arpel_test)

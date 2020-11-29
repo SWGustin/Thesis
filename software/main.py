@@ -1,4 +1,2 @@
-from MVC.Model import parts
-from MVC.data import *
-from MVC.View import viewer
+# put the code to run a demo of it all in here
 
