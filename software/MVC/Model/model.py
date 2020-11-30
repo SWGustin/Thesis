@@ -113,8 +113,8 @@ class ArPEl:
         max_width = self._span//2
         max_length = max(self._base_chord, tip_offset + self._tip_chord)
         self._state_array = np.zeros((math.floor(max_width/self._pel_width), 
-                            math.floor(max_length/self._pel_width), 7))
-
+                            math.floor(max_length/self._pel_width)), )
+        state_vector = np.dtype({'thrust': ('c4 ')})
         #initialize all cells that fit
 
     """
@@ -149,7 +149,16 @@ class ArPEl:
         print(np.sqrt(np.mean(np.square(self._state_array[0:3,:,:]), axis = 2)))
         return ''
 
+    def showInitialized(self):
+        print(np.sqrt())
+
+# test = ArPEl(base_chord = 20, tip_chord = 15, span = 100, leading_angle = 2,
+#             no_of_switches = 3, pel_width = 2, pel_seperation = 1)
+# print(test)
 
 
-test = ArPEl(base_chord = 20, tip_chord = 15, span = 100, leading_angle = 2, no_of_switches = 3, pel_width = 2, pel_seperation = 1)
-print(test)
+test_data_type = np.dtype([('thrust','i1'), ('initialized', '?'), ('power', 'f4'), ('frequency', 'u1'),('no_of_pels', 'u1')])
+
+test_Arr = np.zeros((3,3), dtype= test_data_type)
+
+print(test_Arr)
