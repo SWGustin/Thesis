@@ -1,4 +1,5 @@
 import math 
+import numpy as np
 
 class BasisVectorError(Exception):
     pass
@@ -47,7 +48,7 @@ class PEL:
         self._dutyCycle = 0
         self._primaryDirection = primaryDirection
         self._Switches = [Switch() for _ in range(self._noOfSwitches)]
-        self._cardinalDirections = [(360/self._noOfSwitches * i) + self._primaryDirection for i in range(self._noOfSwitches)]
+        self._basis_vectors = [(360/self._noOfSwitches * i) + self._primaryDirection for i in range(self._noOfSwitches)]
     
     @property
     def noOfSwitches(self):
@@ -88,27 +89,39 @@ class PEL:
         #TODO: updateto include handling of primary direction and for actioning PELS
 
 class ArPEl:
-    def __init__(self, base_chord, tip_chord, span, leading_angle):
-        self._base_chord = 0
-        self._tip_chord = 0
-        self._span = 0
-        self._leading_angle = 0
-        self._pel_spacing = float('inf')
-        self._pels = [[]]
+    """
+    This creates the np array representing the current firing state and handling functions.
+    """
+    def __init__(self, *args, base_chord, tip_chord, span, leading_angle, no_of_switches, pel_width, pel_seperation):
+        self._base_chord = base_chord
+        self._tip_chord = tip_chord
+        self._span = span
+        self._leading_angle = leading_angle
+        self._no_of_Switches = no_of_switches 
+        self._pel_width = pel_width 
+        self._pel_seperation = pel_seperation
         self._geometry = [(0,0)]
+        self._pel = PEL(self._no_of_Switches,self._pel_width,0)
 
         # get corners of basic wing
-        tip_offset = span*math.tan(math.radians(leading_angle))
-        self._geometry.append((span, tip_offset))
-        self._geometry.append((span,self._geometry[1][1]+tip_chord))
-        self._geometry.append((0,base_chord))
+        tip_offset = self._span*math.tan(math.radians(self._leading_angle))
+        self._geometry.append((self._span, tip_offset))
+        self._geometry.append((self._span,self._geometry[1][1]+self._tip_chord))
+        self._geometry.append((0,self._base_chord))
 
-        # build array of np elements
-        max_width = span/2
-        max_length = max(self._base_chord, tip_offset + tip_chord)
+        # build an np.array
+        max_width = self._span//2
+        max_length = max(self._base_chord, tip_offset + self._tip_chord)
+        self._state_array = np.zeros((math.floor(max_width/self._pel_width), 
+                            math.floor(max_length/self._pel_width), 7))
 
-        self.state_array = np.zeros(max_width, max_length, 3)
+        #initialize all cells that fit
 
+    """
+        The data stored in the state array is stored for each PEl in the 2D Array of PEls.  
+        The stored data vectors is as follows
+        [DC_x, DC_y, DC_z, Initialized, MAX_POWER, FREQUENCY, NUMBER OF PELS]
+    """
 
     @property
     def geometry(self):
@@ -117,5 +130,26 @@ class ArPEl:
     #TODO: add unadded setters and calculate array of pels   
 
     def __repr__(self):
-        print(self.state_array.rms())
+        print('the wing geometry is as follows: \n'
+            f'span = {self._span};  '
+            f'base chord = {self._base_chord};  '
+            f'tip chord = {self._tip_chord};  '
+            f'leading edge angle = {self._leading_angle}')
+        print('---------------------------')
+        print('the Plasma Element geometry is as follows: \n'
+            f'pel width= {self._pel_width};  '
+            f'space between = {self._pel_seperation}')
+        print('---------------------------')
+        print('the resulting Array of Plasma Elements has dimensions:\n'
+            f'overall span = {self._state_array.shape[0]};   '
+            f'overall chord = {self._state_array.shape[1]};  '
+            f'pel state vector depth = {self._state_array.shape[2]}')
+        print('---------------------------')
+        print('the following is the vector lengths of firing vector for cells')
+        print(np.sqrt(np.mean(np.square(self._state_array[0:3,:,:]), axis = 2)))
+        return ''
 
+
+
+test = ArPEl(base_chord = 20, tip_chord = 15, span = 100, leading_angle = 2, no_of_switches = 3, pel_width = 2, pel_seperation = 1)
+print(test)
