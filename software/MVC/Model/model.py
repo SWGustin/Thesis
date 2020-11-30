@@ -158,11 +158,40 @@ class ArPEl:
     def showInitialized(self):
         print(np.sqrt())
 
-    def getVelocity(self, x, y):
-        return abs(self._state_array[x,y]['thrust'])
+    @property
+    def velocity(self):
+        return abs(self._state_array[1,1]['thrust'])
+
+    @velocity.setter
+    def velocity(self, vars):
+        (x, y, V_x,V_y) = vars
+        self._state_array[x,y]['thrust'] = V_x + V_y*j 
+
+    @property
+    def Direction(self, x, y):
+        return np.angle(self._state_array[x,y]['thrust'], True)
+
+    def __getitem__(self, vals):
+        try:
+            x, y, attribute = vals
+        except ValueError:
+            x, y = vals
+            attribute = None
+            
+        if attribute is None:
+            return self._state_array[x, y]
+        elif attribute in self._state_array.dtype.names:
+            return self._state_array[x,y][attribute]
+        elif isinstance(attribute, number):
+            return self._stat_array[x,y,attribute]
+        else:
+            raise ValueError(f'{attribute} was not a valid index')
+
 
 test = ArPEl(base_chord = 20, tip_chord = 15, span = 100, leading_angle = 2,
             no_of_switches = 3, pel_width = 2, pel_seperation = 1)
 
 print(test)
-print(test.getVelocity(1,1))
+
+print(test[1,1])
+#print(test.getDirection(1,1))
