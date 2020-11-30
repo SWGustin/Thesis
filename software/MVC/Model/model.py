@@ -109,12 +109,17 @@ class ArPEl:
         self._geometry.append((self._span,self._geometry[1][1]+self._tip_chord))
         self._geometry.append((0,self._base_chord))
 
-        # build an np.array
-        max_width = self._span//2
-        max_length = max(self._base_chord, tip_offset + self._tip_chord)
-        self._state_array = np.zeros((math.floor(max_width/self._pel_width), 
-                            math.floor(max_length/self._pel_width)), )
-        state_vector = np.dtype({'thrust': ('c4 ')})
+        #establish the state vector for a PEl
+        state_vector = np.dtype([('thrust','c8'), ('initialized', '?'), ('power', 'f4'), ('frequency', 'u1'),('no_of_pels', 'u1')])
+
+        # build an np.array of state vectors
+        max_span = self._span//2
+        max_chord = max(self._base_chord, tip_offset + self._tip_chord)
+        no_of_rows = math.floor((max_chord)/(self._pel_width+self._pel_seperation))
+        no_of_columns = math.floor((max_span - self._pel_seperation)/(self._pel_width + self._pel_seperation)) 
+        self._state_array =np.zeros((no_of_rows,no_of_columns), dtype = state_vector)
+        self._state_array = np.rec.array(self._state_array)
+
         #initialize all cells that fit
 
     """
@@ -141,27 +146,23 @@ class ArPEl:
             f'space between = {self._pel_seperation}')
         print('---------------------------')
         print('the resulting Array of Plasma Elements has dimensions:\n'
-            f'overall span = {self._state_array.shape[0]};   '
-            f'overall chord = {self._state_array.shape[1]};  '
-            f'pel state vector depth = {self._state_array.shape[2]}')
+            f'overall span in PEls = {self._state_array.shape[1]};   '
+            f'overall chord in PEls = {self._state_array.shape[0]}')
         print('---------------------------')
-        print('the following is the vector lengths of firing vector for cells')
-        print(np.sqrt(np.mean(np.square(self._state_array[0:3,:,:]), axis = 2)))
+        print('The following is the vector lengths of firing vector for PEls')
+        print(abs(self._state_array['thrust']))
+        print('\nThe following is the initialization states of PEls')
+        print(self._state_array['initialized'])
         return ''
 
     def showInitialized(self):
         print(np.sqrt())
 
-# test = ArPEl(base_chord = 20, tip_chord = 15, span = 100, leading_angle = 2,
-#             no_of_switches = 3, pel_width = 2, pel_seperation = 1)
-# print(test)
+    def getVelocity(self, x, y):
+        return abs(self._state_array[x,y]['thrust'])
 
+test = ArPEl(base_chord = 20, tip_chord = 15, span = 100, leading_angle = 2,
+            no_of_switches = 3, pel_width = 2, pel_seperation = 1)
 
-test_data_type = np.dtype([('thrust','c8'), ('initialized', '?'), ('power', 'f4'), ('frequency', 'u1'),('no_of_pels', 'u1')])
-
-test_Arr = np.zeros((3,3), dtype= test_data_type)
-
-test_Arr[1,2]['thrust'] = 1+1j
-print(type(test_Arr[1,2]['thrust']))
-print(test_Arr[1,2]['thrust'])
-
+print(test)
+print(test.getVelocity(1,1))
