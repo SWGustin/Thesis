@@ -157,8 +157,11 @@ class ArPEl:
 # print(test)
 
 
-test_data_type = np.dtype([('thrust','i1'), ('initialized', '?'), ('power', 'f4'), ('frequency', 'u1'),('no_of_pels', 'u1')])
+test_data_type = np.dtype([('thrust','c8'), ('initialized', '?'), ('power', 'f4'), ('frequency', 'u1'),('no_of_pels', 'u1')])
 
 test_Arr = np.zeros((3,3), dtype= test_data_type)
 
-print(test_Arr)
+test_Arr[1,2]['thrust'] = 1+1j
+print(type(test_Arr[1,2]['thrust']))
+print(test_Arr[1,2]['thrust'])
+
