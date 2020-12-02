@@ -1,6 +1,7 @@
 import os
 import json 
 import math 
+import numpy as np
 
 class BasisVectorError(Exception):
     pass
@@ -51,6 +52,7 @@ class PEL:
         self._thrust = 0+0j
         self._initialized = False
         self._frequency = 100
+        self._basis_conversion_matrix = np.zeros((len(self._Switches)))
 
         #set complex basis vectors
         for s, bv in zip(self._Switches, self._basis_angles):
@@ -58,6 +60,8 @@ class PEL:
             s.dutyCycle = 0
             s.basisVector = (math.cos(math.radians(bv)), math.sin(math.radians(bv)))
 
+        #build the basis conversion matrix
+        np.linag.
 
     def __repr__(self):
         return str(self._thrust)
@@ -90,8 +94,8 @@ class PEL:
         if correction > 1:
             val = val / correction
         self._thrust = val
+    #this function must also action PELS
 
-        #TODO: updateto include handling of primary direction and for actioning PELS
 
 
 class ArPel:
@@ -160,14 +164,14 @@ class ArPel:
 
 test = ArPel('config.json')
 print(test)
-testt = test.get((1,1))
-testt.thrust = 1+1j
-print(testt.thrust)
-print(abs(testt.thrust))
+# testt = test.get((1,1))
+# testt.thrust = 1+1j
+# print(testt.thrust)
+# print(abs(testt.thrust))
 
-for i in testt._basis_angles:
-    print(i)
+# for i in testt._basis_angles:
+#     print(i)
 
-for i in testt._Switches:
-    print(i.basisVector)
-    print(abs(i.basisVector))
+# for i in testt._Switches:
+#     print(i.basisVector)
+#     print(abs(i.basisVector))
