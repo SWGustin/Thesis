@@ -9,7 +9,7 @@ class Switch:
     def __init__(self):
         self._dutyCycle = 0
         self._frequency = 0
-        self._basisVector = (0,0)
+        self._basisVector = 0 + 0j
 
     @property
     def dutyCycle(self):
@@ -37,7 +37,7 @@ class Switch:
             x,y = vector
         except ValueError:
             raise ValueError (f'{len(vector)} dimensions given of 2 expected')
-        self._basisVector = vector
+        self._basisVector = complex(x,y)
 
 class PEL:
     def __init__(self, noOfSwitches, totalWidth, primaryDirection = 0):
@@ -47,9 +47,17 @@ class PEL:
         self._thrust = 0+0j
         self._primaryDirection = primaryDirection
         self._Switches = [Switch() for _ in range(self._noOfSwitches)]
-        self._basis_vectors = [(360/self._noOfSwitches * i) + self._primaryDirection for i in range(self._noOfSwitches)]
+        self._basis_angles = [(360/self._noOfSwitches * i) + self._primaryDirection for i in range(self._noOfSwitches)]
         self._thrust = 0+0j
         self._initialized = False
+        self._frequency = 100
+
+        #set complex basis vectors
+        for s, bv in zip(self._Switches, self._basis_angles):
+            s.frequency = self._frequency
+            s.dutyCycle = 0
+            s.basisVector = (math.cos(math.radians(bv)), math.sin(math.radians(bv)))
+
 
     def __repr__(self):
         return str(self._thrust)
@@ -65,12 +73,23 @@ class PEL:
             self._thrust = None
 
     @property
-    def dutyCycle(self):
-        return self._dutyCycle
+    def frequency(self):
+        return self._frequency
 
-    @dutyCycle.setter
-    def dutyCycle(self, dc):
-        self._dutyCycle = min(max(0,dc),100)
+    @frequency.setter
+    def frequency(self, Hz):
+        self._frequency = max(0,Hz)
+
+    @property
+    def thrust(self):
+        return self._thrust
+    
+    @thrust.setter
+    def thrust(self, val):
+        correction = abs(val)
+        if correction > 1:
+            val = val / correction
+        self._thrust = val
 
         #TODO: updateto include handling of primary direction and for actioning PELS
 
@@ -134,5 +153,21 @@ class ArPel:
             print(i)
         return ''
 
+    def get(self, var):
+        x, y = var
+        return self._state_array[y][x]
+
+
 test = ArPel('config.json')
 print(test)
+testt = test.get((1,1))
+testt.thrust = 1+1j
+print(testt.thrust)
+print(abs(testt.thrust))
+
+for i in testt._basis_angles:
+    print(i)
+
+for i in testt._Switches:
+    print(i.basisVector)
+    print(abs(i.basisVector))
