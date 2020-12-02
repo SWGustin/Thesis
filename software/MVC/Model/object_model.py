@@ -1,3 +1,7 @@
+import os
+import json 
+import math 
+
 class BasisVectorError(Exception):
     pass
 
@@ -84,3 +88,36 @@ class PEL:
         self._angle = angle % 360
 
         #TODO: updateto include handling of primary direction and for actioning PELS
+
+
+class ArPel:
+    def __init__(self, config_file_name):
+        config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + '\\' + config_file_name
+        with open(config_path, 'r') as f:
+            data = json.load(f)
+        self._span = data['wing_geometry']['span']/2
+        self._root_chord = data['wing_geometry']['root_chord']
+        self._tip_chord = data['wing_geometry']['tip_chord']
+        self._sweep_angle = data['wing_geometry']['sweep_angle']
+        self._pel_width = data['pel_geometry']['overall_width']
+        self._pel_sep = data['pel_geometry']['seperation']
+        self._pel_cardinality = data['pel_geometry']['number_of_switches']
+        self._cardinal_offset = data['pel_geometry']['primary_direction']
+
+        self._geometry = [(0,0)]
+        # get corners of basic wing1
+        tip_offset = self._span*math.tan(math.radians(self._sweep_angle))
+        self._geometry.append((self._span, tip_offset))
+        self._geometry.append((self._span,self._geometry[1][1]+self._tip_chord))
+        self._geometry.append((0,self._root_chord))
+
+        # build an np.array of state vectors
+        max_span = self._span//2
+        max_chord = max(self._root_chord, tip_offset + self._tip_chord)
+        no_of_rows = math.floor((max_chord)/(self._pel_width + self._pel_sep))
+        no_of_columns = math.floor((max_span - self._pel_sep)/(self._pel_width + self._pel_sep)) 
+        self._state_array = [[PEL(self._pel_cardinality,self._pel_width, self._cardinal_offset) 
+                            for _ in range(no_of_columns)] for x in range(no_of_rows)]
+
+
+test = ArPel('config.json')

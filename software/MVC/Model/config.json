@@ -1,0 +1,14 @@
+{
+    "wing_geometry" : {
+        "root_chord" : 10,
+        "tip_chord" : 7,
+        "sweep_angle" : 3,
+        "span" : 100    
+    },
+    "pel_geometry" :{
+        "number_of_switches" : 3,
+        "overall_width" : 2,
+        "seperation" : 1,
+        "primary_direction" : 0
+    }
+}
