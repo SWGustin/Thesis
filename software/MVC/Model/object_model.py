@@ -41,6 +41,24 @@ class Switch:
         self._basisVector = complex(x,y)
 
 class PEL:
+
+    nested_hashed_conversion_vectors = dict()
+    #TODO: fill this out
+        # the above dict has
+        #key =  
+            #(no_of_switches, primary_direction)
+        #value
+            #dict containing:
+            #key = 
+                # first switch # encountered when circling clockwise indexed from 0
+            #value = 
+                #conversion matrix
+
+    @classmethod
+    def add_to_hashed_conversion_vectors(primary_direction, number_of_switches):
+        pass
+            
+
     def __init__(self, noOfSwitches, totalWidth, primaryDirection = 0):
         if noOfSwitches < 3:
             raise BasisVectorError("The minimum number of Low Voltage Elements for a additively closed space is 3")
@@ -52,7 +70,7 @@ class PEL:
         self._Switches = [Switch() for _ in range(self._noOfSwitches)]
         self._basis_angles = [((360/self._noOfSwitches * i) + self._primaryDirection)%360 for i in range(self._noOfSwitches)]
         self._basis_vectors = [(math.cos(math.radians(x)),math.sin(math.radians(x))) for x in self._basis_angles]
-        
+        self._hashed_basis_vectors = {h : idx for h, idx in zip(range(self._noOfSwitches), self._basis_vectors)}
         #set complex basis vectors
         for s, bv in zip(self._Switches, self._basis_angles):
             s.frequency = self._frequency
@@ -95,6 +113,7 @@ class PEL:
     #TODO: use a dictionary with vals from 1-> # of switches
     #hash those values and have the conversion matrices ready
     #use class attributes
+    #TODO: use nested class attribute dictionaries to hold the hashed conversion vectors
         thrust_angle = np.degrees(np.angle(val))%180
         i = 0
         while i < len(self._basis_angles) and \
