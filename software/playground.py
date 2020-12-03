@@ -1,25 +1,40 @@
-import numpy as np
+#try class attributes and method
 
-b1 = 1+0j
-b2 = 0.5 - 0.87j
-b3 = -0.5 - 0.87j
+    #TODO: fill this out
+        # the above dict has
+        #key =  
+            #(no_of_switches, primary_direction)
+        #value
+            #dict containing:
+            #key = 
+                # first switch # encountered when circling clockwise indexed from 0
+            #value = 
+                #conversion matrix
 
-t = .717+.717j
 
-BVs= [b1,b2,b3]
-Angles = [0,120,240]
+class test:
+    classatr = dict()
 
-thrust_angle = np.degrees(np.angle(t))%180
-#use angles array
+    def add_to_dict(key, val):
+        if key not in test.classatr.keys():
+            test.classatr[key] = val
 
-i = 0
-while i < len(BVs) and np.angle(BVs[i+1])%180 < np.angle(t)%180:
-    i+=1
-bv = [[np.real(BVs[i]),np.real(BVs[i+1])],
-        [np.imag(BVs[i]),np.imag(BVs[i+1])]]
+    def print_stuff():
+        print(test.classatr)
 
-convert = np.linalg.inv(bv)
-x= np.matmul(convert,[1,1])
-nrm = np.linalg.norm(x)
-x = x/nrm
+    def __init__(self, key, val):
+        test.add_to_dict(key, val)
+    
+    def inst_print_stuff(self):
+        test.print_stuff()
 
+
+t1 = test(0,"zero")
+test.classatr[1] = "one"
+
+test.add_to_dict(3, "three")
+
+t2 = test(0,"three")
+test.print_stuff()
+
+t2.inst_print_stuff()

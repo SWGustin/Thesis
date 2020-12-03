@@ -7,10 +7,10 @@ class BasisVectorError(Exception):
     pass
 
 class Switch:
-    def __init__(self):
-        self._dutyCycle = 0
-        self._frequency = 0
-        self._basisVector = 0 + 0j
+    def __init__(self, *,freq = 1000, pow = 0):
+        self._dutyCycle = pow
+        self._frequency = freq
+        #self._basisVector = 0 + 0j
 
     @property
     def dutyCycle(self):
@@ -28,36 +28,39 @@ class Switch:
     def frequency(self, Hz):
         self._frequency = Hz
 
-    @property
-    def basisVector(self):
-        return self._basisVector
+    def __repr__(self):
+        return f'(power, frequency) = ({self._dutyCycle}, {self._frequency})'
 
-    @basisVector.setter
-    def basisVector(self, vector):
-        try:
-            x,y = vector
-        except ValueError:
-            raise ValueError (f'{len(vector)} dimensions given of 2 expected')
-        self._basisVector = complex(x,y)
 
 class PEL:
-
-    nested_hashed_conversion_vectors = dict()
-    #TODO: fill this out
-        # the above dict has
-        #key =  
-            #(no_of_switches, primary_direction)
-        #value
-            #dict containing:
-            #key = 
-                # first switch # encountered when circling clockwise indexed from 0
-            #value = 
-                #conversion matrix
+    conversion_matrices = dict()
 
     @classmethod
-    def add_to_hashed_conversion_vectors(primary_direction, number_of_switches):
-        pass
-            
+    def calc_BVs(PEL, no_switches, primary_dir):
+        _basis_angles = [((360/no_switches * i) + primary_dir)%360 for i in range(no_switches)]
+        return [(math.cos(math.radians(x)),math.sin(math.radians(x))) for x in _basis_angles]
+    
+    @classmethod
+    def calc_Conversion_matrix(PEL, V1,V2):
+        bv = [[V1[0], V2[0]],[V1[1], V2[1]]]
+        return np.linalg.inv(bv)
+
+    @classmethod
+    def addConversionMatrix(PEL, no_switches, primary_dir):
+        outer_key = (no_switches, primary_dir)
+        if outer_key in PEL.conversion_matrices.keys():
+            return
+        inner_keys = list(range(no_switches))
+        inner_vals = []#this needs to be an array of conversion matrices
+        BVs = PEL.calc_BVs(no_switches, primary_dir)
+        for i in inner_keys:
+            v1= BVs[i]
+            v2 = BVs[((i+1)%no_switches)]
+            inner_vals.append(PEL.calc_Conversion_matrix(v1,v2))
+        
+        inner_dict = dict(zip(inner_keys,inner_vals))
+
+        PEL.conversion_matrices[outer_key] = inner_dict            
 
     def __init__(self, noOfSwitches, totalWidth, primaryDirection = 0):
         if noOfSwitches < 3:
@@ -68,14 +71,8 @@ class PEL:
         self._initialized = False
         self._frequency = 100
         self._Switches = [Switch() for _ in range(self._noOfSwitches)]
-        self._basis_angles = [((360/self._noOfSwitches * i) + self._primaryDirection)%360 for i in range(self._noOfSwitches)]
-        self._basis_vectors = [(math.cos(math.radians(x)),math.sin(math.radians(x))) for x in self._basis_angles]
-        self._hashed_basis_vectors = {h : idx for h, idx in zip(range(self._noOfSwitches), self._basis_vectors)}
-        #set complex basis vectors
-        for s, bv in zip(self._Switches, self._basis_angles):
-            s.frequency = self._frequency
-            s.dutyCycle = 0
-            s.basisVector = (math.cos(math.radians(bv)), math.sin(math.radians(bv))) 
+        PEL.addConversionMatrix(self._noOfSwitches,self._primaryDirection)
+        
 
     def __repr__(self):
         return str(self._thrust)
@@ -109,24 +106,15 @@ class PEL:
             val = val / correction
             correction = 1
         self._thrust = val
-    #this function must also action PELS
-    #TODO: use a dictionary with vals from 1-> # of switches
-    #hash those values and have the conversion matrices ready
-    #use class attributes
-    #TODO: use nested class attribute dictionaries to hold the hashed conversion vectors
-        thrust_angle = np.degrees(np.angle(val))%180
-        i = 0
-        while i < len(self._basis_angles) and \
-            (self._basis_angles[i+1] < np.angle(val)%180):
-            i+=1
-        print(self._basis_vectors)
-        bv = [[self._basis_vectors[i][0], self._basis_vectors[i+1][0]],\
-            [self._basis_vectors[i][1], self._basis_vectors[i+1][1]]]
-        convert = np.linalg.inv(bv)
+        thrust_hash = (np.degrees(np.angle(val))%360)//(360/self._noOfSwitches)
+        convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
         local_thrust = np.matmul(convert, [np.real(self._thrust),np.imag(self._thrust)])
         local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
         for s, t in zip(self._Switches, local_thrust):
             s.dutyCycle = t
+
+        for s in self._Switches:
+            print(s)
 
 
 class ArPel:
@@ -200,9 +188,12 @@ testt.thrust = 1+1j
 #print(testt.thrust)
 #print(abs(testt.thrust))
 
-for i in testt._basis_angles:
-    print(i)
+# for i in testt._basis_angles:
+#     print(i)
 
-for i in testt._Switches:
-    print(i.basisVector)
-    print(abs(i.basisVector))
+# for i in testt._Switches:
+#     print(i.basisVector)
+#     print(abs(i.basisVector))
+
+test = PEL(3,10)
+print(PEL.conversion_matrices)
