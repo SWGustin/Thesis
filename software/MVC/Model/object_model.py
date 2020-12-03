@@ -47,21 +47,17 @@ class PEL:
         self._noOfSwitches = noOfSwitches
         self._thrust = 0+0j
         self._primaryDirection = primaryDirection
-        self._Switches = [Switch() for _ in range(self._noOfSwitches)]
-        self._basis_angles = [(360/self._noOfSwitches * i) + self._primaryDirection for i in range(self._noOfSwitches)]
-        self._thrust = 0+0j
         self._initialized = False
         self._frequency = 100
-        self._basis_conversion_matrix = np.zeros((len(self._Switches)))
-
+        self._Switches = [Switch() for _ in range(self._noOfSwitches)]
+        self._basis_angles = [((360/self._noOfSwitches * i) + self._primaryDirection)%360 for i in range(self._noOfSwitches)]
+        self._basis_vectors = [(math.cos(math.radians(x)),math.sin(math.radians(x))) for x in self._basis_angles]
+        
         #set complex basis vectors
         for s, bv in zip(self._Switches, self._basis_angles):
             s.frequency = self._frequency
             s.dutyCycle = 0
-            s.basisVector = (math.cos(math.radians(bv)), math.sin(math.radians(bv)))
-
-        #build the basis conversion matrix
-        np.linag.
+            s.basisVector = (math.cos(math.radians(bv)), math.sin(math.radians(bv))) 
 
     def __repr__(self):
         return str(self._thrust)
@@ -74,7 +70,7 @@ class PEL:
     def initialized(self, val):
         self._initialized = val
         if not self._initialized:
-            self._thrust = None
+            self._thrust = -1
 
     @property
     def frequency(self):
@@ -93,9 +89,25 @@ class PEL:
         correction = abs(val)
         if correction > 1:
             val = val / correction
+            correction = 1
         self._thrust = val
     #this function must also action PELS
-
+    #TODO: use a dictionary with vals from 1-> # of switches
+    #hash those values and have the conversion matrices ready
+    #use class attributes
+        thrust_angle = np.degrees(np.angle(val))%180
+        i = 0
+        while i < len(self._basis_angles) and \
+            (self._basis_angles[i+1] < np.angle(val)%180):
+            i+=1
+        print(self._basis_vectors)
+        bv = [[self._basis_vectors[i][0], self._basis_vectors[i+1][0]],\
+            [self._basis_vectors[i][1], self._basis_vectors[i+1][1]]]
+        convert = np.linalg.inv(bv)
+        local_thrust = np.matmul(convert, [np.real(self._thrust),np.imag(self._thrust)])
+        local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
+        for s, t in zip(self._Switches, local_thrust):
+            s.dutyCycle = t
 
 
 class ArPel:
@@ -115,18 +127,18 @@ class ArPel:
         _set_back = data['wing_geometry']['set_back']
 
         _geometry = [(0,0)]
-        # get corners of basic wing1
+        # get corners of basic wing
         tip_offset = _span*math.tan(math.radians(_sweep_angle))
         _geometry.append((_span, tip_offset))
         _geometry.append((_span,_geometry[1][1]+_tip_chord))
         _geometry.append((0,_root_chord))
 
-        # build an np.array of state vectors
+        # build an array of PELs
         _max_chord = max(_root_chord, tip_offset + _tip_chord)
         _no_of_rows = math.floor((_max_chord)/(_pel_width + _pel_sep))
         _no_of_columns = math.floor((_span - _pel_sep)/(_pel_width + _pel_sep)) 
-
-        self._state_array = [[PEL(_pel_cardinality,_pel_width, _cardinal_offset) 
+        
+        self._state_array = [[PEL(_pel_cardinality,_pel_width, _cardinal_offset)     
                             for _ in range(_no_of_columns)] for x in range(_no_of_rows)]
 
         _trailing_edge_sweep_angle = (tip_offset + _tip_chord - _root_chord)/_span
@@ -140,7 +152,7 @@ class ArPel:
                 (math.tan(math.radians(_sweep_angle)) * width < row_set_back) \
                 and _root_chord + width * _trailing_edge_sweep_angle > \
                 row_set_back + _pel_width
-        
+
         for row in self._state_array[::-1]:
             if not any(row):
                 del(row)
@@ -163,15 +175,15 @@ class ArPel:
 
 
 test = ArPel('config.json')
-print(test)
-# testt = test.get((1,1))
-# testt.thrust = 1+1j
-# print(testt.thrust)
-# print(abs(testt.thrust))
+#print(test)
+testt = test.get((1,1))
+testt.thrust = 1+1j
+#print(testt.thrust)
+#print(abs(testt.thrust))
 
-# for i in testt._basis_angles:
-#     print(i)
+for i in testt._basis_angles:
+    print(i)
 
-# for i in testt._Switches:
-#     print(i.basisVector)
-#     print(abs(i.basisVector))
+for i in testt._Switches:
+    print(i.basisVector)
+    print(abs(i.basisVector))
