@@ -11,5 +11,16 @@
         "overall_width" : 2,
         "seperation" : 1,
         "primary_direction" : 0
+    },
+    "viewer" : {
+        "refreshRate" : 10,
+        "displayTitle" : "",
+        "screenSize" : [800,600],
+        "bgColour" : [255,255,255],
+        "offColour" : [0,0,255],
+        "onColour" : [255,0,0],
+        "arrowWidth" : 1,
+        "maxArrowLength" : 20
     }
 }
+

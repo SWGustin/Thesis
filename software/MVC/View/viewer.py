@@ -1,7 +1,9 @@
-import pygame
 import viewer_config 
 
+config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + '\\' + config_file_name
+
 class Display:
+    
     def __init__(self, arpel=None):
         self._arrowLength = config.maxArrowLength
         self._arrowWidth = config.arrowWidth
@@ -9,14 +11,8 @@ class Display:
         self._offColour = config.offColour 
         self._arpel = arpel
 
-        pygame.init()
-        self.display = pygame.display.set_mode(config.screenSize)
-        #self.display.title(config.displayTitle)
-        self.display.fill(config.bgColour)
-
     def _drawWing(self):
-        pygame.draw.polygon(screen,(200,200,200),self._arpel.geometry)
-        pygame.display.update()    
+        pass
 
     def _drawPEl(self):
         pass        

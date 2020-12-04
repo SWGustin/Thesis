@@ -1,7 +1,7 @@
 import os
 import json 
-import math 
 import numpy as np
+import time
 
 class BasisVectorError(Exception):
     pass
@@ -38,7 +38,7 @@ class PEL:
     @classmethod
     def calc_BVs(PEL, no_switches, primary_dir):
         _basis_angles = [((360/no_switches * i) + primary_dir)%360 for i in range(no_switches)]
-        return [(math.cos(math.radians(x)),math.sin(math.radians(x))) for x in _basis_angles]
+        return [(np.cos(np.radians(x)),np.sin(np.radians(x))) for x in _basis_angles]
     
     @classmethod
     def calc_Conversion_matrix(PEL, V1,V2):
@@ -50,17 +50,14 @@ class PEL:
         outer_key = (no_switches, primary_dir)
         if outer_key in PEL.conversion_matrices.keys():
             return
-        inner_keys = list(range(no_switches))
         inner_vals = []#this needs to be an array of conversion matrices
         BVs = PEL.calc_BVs(no_switches, primary_dir)
-        for i in inner_keys:
+        for i in range(no_switches):
             v1= BVs[i]
             v2 = BVs[((i+1)%no_switches)]
             inner_vals.append(PEL.calc_Conversion_matrix(v1,v2))
         
-        inner_dict = dict(zip(inner_keys,inner_vals))
-
-        PEL.conversion_matrices[outer_key] = inner_dict            
+        PEL.conversion_matrices[outer_key] = inner_vals
 
     def __init__(self, noOfSwitches, totalWidth, primaryDirection = 0):
         if noOfSwitches < 3:
@@ -70,9 +67,8 @@ class PEL:
         self._primaryDirection = primaryDirection
         self._initialized = False
         self._frequency = 100
-        self._Switches = [Switch() for _ in range(self._noOfSwitches)]
+        self._switches = [Switch() for _ in range(self._noOfSwitches)]
         PEL.addConversionMatrix(self._noOfSwitches,self._primaryDirection)
-        
 
     def __repr__(self):
         return str(self._thrust)
@@ -106,16 +102,16 @@ class PEL:
             val = val / correction
             correction = 1
         self._thrust = val
-        thrust_hash = (np.degrees(np.angle(val))%360)//(360/self._noOfSwitches)
+        thrust_hash = int((np.degrees(np.angle(val))%360)//(360/self._noOfSwitches))
         convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
         local_thrust = np.matmul(convert, [np.real(self._thrust),np.imag(self._thrust)])
         local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
-        for s, t in zip(self._Switches, local_thrust):
+        for s, t in zip(self._switches, local_thrust):
             s.dutyCycle = t
 
-        for s in self._Switches:
-            print(s)
-
+    @property
+    def switches(self):
+        return self._switches
 
 class ArPel:
     def __init__(self, config_file_name):
@@ -123,7 +119,7 @@ class ArPel:
         with open(config_path, 'r') as f:
             data = json.load(f)
         
-        _span = data['wing_geometry']['span']/2
+        self._span = data['wing_geometry']['span']/2
         _root_chord = data['wing_geometry']['root_chord']
         _tip_chord = data['wing_geometry']['tip_chord']
         _sweep_angle = data['wing_geometry']['sweep_angle']
@@ -135,20 +131,21 @@ class ArPel:
 
         _geometry = [(0,0)]
         # get corners of basic wing
-        tip_offset = _span*math.tan(math.radians(_sweep_angle))
-        _geometry.append((_span, tip_offset))
-        _geometry.append((_span,_geometry[1][1]+_tip_chord))
+        tip_offset = self._span*np.tan(np.radians(_sweep_angle))
+        _geometry.append((self._span, tip_offset))
+        _geometry.append((self._span,_geometry[1][1]+_tip_chord))
         _geometry.append((0,_root_chord))
 
         # build an array of PELs
-        _max_chord = max(_root_chord, tip_offset + _tip_chord)
-        _no_of_rows = math.floor((_max_chord)/(_pel_width + _pel_sep))
-        _no_of_columns = math.floor((_span - _pel_sep)/(_pel_width + _pel_sep)) 
+        self._max_chord = max(_root_chord, tip_offset + _tip_chord)
+        self._no_of_rows = int(np.floor((self._max_chord)/(_pel_width + _pel_sep)))
+        self._no_of_columns = int(np.floor((self._span - _pel_sep)/(_pel_width + _pel_sep)))
         
+        #create matrix of PELs
         self._state_array = [[PEL(_pel_cardinality,_pel_width, _cardinal_offset)     
-                            for _ in range(_no_of_columns)] for x in range(_no_of_rows)]
+                            for _ in range(self._no_of_columns)] for x in range(self._no_of_rows)]
 
-        _trailing_edge_sweep_angle = (tip_offset + _tip_chord - _root_chord)/_span
+        _trailing_edge_sweep_angle = (tip_offset + _tip_chord - _root_chord)/self._span
         
         #initialize elements that are in bounds
         for row in range(len(self._state_array)):
@@ -156,13 +153,29 @@ class ArPel:
             for col in range(len(self._state_array[0])):
                 width = _pel_sep + col * (_pel_width + _pel_sep)
                 self._state_array[row][col].initialized = \
-                (math.tan(math.radians(_sweep_angle)) * width < row_set_back) \
+                (np.tan(np.radians(_sweep_angle)) * width < row_set_back) \
                 and _root_chord + width * _trailing_edge_sweep_angle > \
                 row_set_back + _pel_width
 
         for row in self._state_array[::-1]:
             if not any(row):
                 del(row)
+
+    @property
+    def max_chord(self):
+        return self._max_chord
+
+    @property
+    def span(self):
+        return self._span
+
+    @property
+    def no_of_rows(self):
+        return self._no_of_rows
+
+    @property
+    def no_of_columns(self):
+        return self._no_of_columns
 
     def __repr__(self):
         print("The array has initialized element:")
@@ -181,19 +194,15 @@ class ArPel:
         return self._state_array[y][x]
 
 
-test = ArPel('config.json')
-#print(test)
-testt = test.get((1,1))
-testt.thrust = 1+1j
-#print(testt.thrust)
-#print(abs(testt.thrust))
+if __name__ == '__main__':
 
-# for i in testt._basis_angles:
-#     print(i)
+    t = time.time()
+    test = ArPel('config.json')
+    t2 = time.time()
+    print(test)
+    print(test.no_of_rows*test.no_of_columns)
+    print(t2-t)
+    print(test.span, test.max_chord)
+    print(test.no_of_columns, test.no_of_rows)
 
-# for i in testt._Switches:
-#     print(i.basisVector)
-#     print(abs(i.basisVector))
-
-test = PEL(3,10)
-print(PEL.conversion_matrices)
+    print(PEL.conversion_matrices)
