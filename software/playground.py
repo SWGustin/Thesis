@@ -38,8 +38,8 @@ fig, ax = plt.subplots(1,1)
 #put shape on subplot
 plt.plot(xs,ys) 
 #do fancy quiver arrows shit
-#controls placement of arrow roots
-X, Y = np.mgrid[:20*np.pi:10j,:6*np.pi:5j]
+#controls placement of arrow roots [<start at zero>:width:number of arrows accross, <start at 0>, height, number of arrows down]
+X, Y = np.mgrid[:15*np.pi:10j,:6*np.pi:3j]
 U = np.cos(X)
 V = np.sin(Y)
 
@@ -66,3 +66,5 @@ anim = animation.FuncAnimation(fig, update_quiver, fargs=(Q, X, Y),
                                interval=50, blit=False)
 fig.tight_layout()
 plt.show()
+
+import numpy as np
