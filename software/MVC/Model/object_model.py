@@ -165,6 +165,14 @@ class ArPel:
             if not any(row):
                 del(row)
 
+    def __getitem__(self, indx):
+        try:
+            x,y = indx
+            return self.state_array[y][x]
+        except TypeError:
+            x = indx
+            return self.state_array[x]
+
     @property
     def state_array(self):
         return self._state_array

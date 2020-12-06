@@ -9,7 +9,10 @@ from random import random
 class Display:
     
     @classmethod
-    def animate(Display, num, Q, arpel, x, y):
+    def animate(Display, num, Q, U, V):
+        U = [max(-1,min(u + random()/10-0.5,1)) for u in V]
+        V = [max(-1,min(v + random()/10-0.5,1)) for v in V]
+
         Q.set_UVC(U,V)
 
         return Q,
