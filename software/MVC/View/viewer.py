@@ -4,9 +4,16 @@ import numpy as np
 from time import time
 from matplotlib import pyplot as plt
 from matplotlib import animation
+from random import random
 
 class Display:
     
+    @classmethod
+    def animate(Display, num, Q, arpel, x, y):
+        Q.set_UVC(U,V)
+
+        return Q,
+
     def __init__(self, arpel=None):
         t1  = time()
         geometry = arpel.geometry
@@ -24,7 +31,6 @@ class Display:
                     x += arpel.pel_width + arpel.pel_sep
                     pel_locs.append((x,y))
             x = 0
-        print(pel_locs)
         #dummy initial thrusts
         # u, v = zip(*[(pel.thrust.real, pel.thrust.imag) \
         #     for row in arpel.state_array for pel in row if pel])
@@ -34,9 +40,13 @@ class Display:
        # put thrusts on screen
         xs, ys = zip(*pel_locs)
         Q = ax.quiver(xs, ys, u ,v , pivot='mid', color='r', units='inches')
-
+        plt.plot(xs, ys, 'bx')
         print(f'built test display in {time()-t1} seconds')
+
+        anim = animation.FuncAnimation(fig, Display.animate, fargs=(Q, xs, ys),
+                               interval=50, blit=False)
         plt.show()
+
 
 
 #         self._arrowLength = config.maxArrowLength

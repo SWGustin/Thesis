@@ -145,9 +145,6 @@ class ArPel:
         
         #create matrix of PELs
         self._state_array = []
-        # self._state_array = [[PEL(_pel_cardinality,self._pel_width, _cardinal_offset)     
-        #                     for _ in range(self._no_of_columns)] for x in range(self._no_of_rows)]
-
         tan_trailing_angle = (self._root_chord - tip_offset - _tip_chord )/self._span
         tan_leading_angle = np.tan(np.radians(_sweep_angle))
         #initialize elements that are in bounds
@@ -239,9 +236,6 @@ if __name__ == '__main__':
     test = ArPel('config.json')
     t2 = time.time()
     print(test)
-    print(test.no_of_rows*test.no_of_columns)
-    print(t2-t)
-    print(test.span, test.max_chord)
-    print(test.no_of_columns, test.no_of_rows)
-
+    print(f'max number of pels is : {test.no_of_rows*test.no_of_columns}')
+    print(f'built arpel in {t2-t} seconds')
     print(PEL.conversion_matrices)
