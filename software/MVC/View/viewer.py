@@ -24,8 +24,12 @@ class Display:
                     pel_locs.append((x,y))
 
         #dummy initial thrusts
-        u = 0
-        v = 1
+        u, v = zip(*[(arpel.state_array[i][j].thrust.real,
+                    arpel.state_array[i][j].thrust.imag)\
+                    for j in range(arpel.no_of_columns)\
+                    for i in range(arpel.no_of_rows)\
+                    if arpel.state_array[i][j]])
+        print(u,v)
         #put thrusts on screen
         xs, ys = zip(*pel_locs)
         Q = ax.quiver(xs, ys, u ,v , pivot='mid', color='r', units='inches')
