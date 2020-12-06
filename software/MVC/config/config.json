@@ -1,9 +1,9 @@
 {
     "wing_geometry" : {
-        "root_chord" : 20,
-        "tip_chord" : 10,
-        "sweep_angle" : 4,
-        "span" : 100,
+        "root_chord" : 200,
+        "tip_chord" : 100,
+        "sweep_angle" : 10,
+        "span" : 1000,
         "set_back" : 2   
     },
     "pel_geometry" :{

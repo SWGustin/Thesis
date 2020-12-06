@@ -115,7 +115,8 @@ class PEL:
 
 class ArPel:
     def __init__(self, config_file_name):
-        config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + '\\' + config_file_name
+        config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))  
+        config_path = '\\'.join(config_path.split('\\')[:-1]) + '\\config\\' + config_file_name
         with open(config_path, 'r') as f:
             data = json.load(f)
         
@@ -129,12 +130,12 @@ class ArPel:
         _cardinal_offset = data['pel_geometry']['primary_direction']
         _set_back = data['wing_geometry']['set_back']
 
-        _geometry = [(0,0)]
+        self._geometry = [(0,_root_chord)]
         # get corners of basic wing
         tip_offset = self._span*np.tan(np.radians(_sweep_angle))
-        _geometry.append((self._span, tip_offset))
-        _geometry.append((self._span,_geometry[1][1]+_tip_chord))
-        _geometry.append((0,_root_chord))
+        self._geometry.append((self._span, _root_chord - tip_offset))
+        self._geometry.append((self._span,self._geometry[1][1]-_tip_chord))
+        self._geometry.append((0,0))
 
         # build an array of PELs
         self._max_chord = max(_root_chord, tip_offset + _tip_chord)
@@ -152,10 +153,10 @@ class ArPel:
             row_set_back = row * (_pel_sep + _pel_width) + _set_back
             for col in range(len(self._state_array[0])):
                 width = _pel_sep + col * (_pel_width + _pel_sep)
-                self._state_array[row][col].initialized = \
-                (np.tan(np.radians(_sweep_angle)) * width < row_set_back) \
-                and _root_chord + width * _trailing_edge_sweep_angle > \
-                row_set_back + _pel_width
+                if not ((np.tan(np.radians(_sweep_angle)) * width < row_set_back) \
+                    and _root_chord + width * _trailing_edge_sweep_angle > \
+                    row_set_back + _pel_width ):
+                    self._state_array[row][col] = None
 
         for row in self._state_array[::-1]:
             if not any(row):
@@ -164,7 +165,11 @@ class ArPel:
     @property
     def max_chord(self):
         return self._max_chord
-
+    
+    @property
+    def geometry(self):
+        return self._geometry
+        
     @property
     def span(self):
         return self._span
@@ -181,12 +186,18 @@ class ArPel:
         print("The array has initialized element:")
         for i in self._state_array:
             for p in i:
-                print(p.initialized, end = ' ')
+                if p:
+                    print(p.initialized, end = ' ')
+                else:
+                    print('    ', end = ' ')
             print('')
         print()
         print("Thrust vectors are as follows")
         for i in self._state_array:
-            print(i)
+            for j in i:
+                if j :
+                    print(j, end = ' ')
+            print()
         return ''
 
     def get(self, var):
