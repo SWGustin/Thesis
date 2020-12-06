@@ -1,40 +1,41 @@
 import os
 import json
 import numpy as np
+from time import time
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
 class Display:
     
     def __init__(self, arpel=None):
+        t1  = time()
         geometry = arpel.geometry
         geometry.append(geometry[0])
         fig, ax = plt.subplots(1,1)
         xs, ys = zip(*geometry)
         plt.plot(xs,ys)
         pel_locs = []
-        for row in range(arpel.no_of_rows):
-
-            for col in range(arpel.no_of_columns):
-                y = arpel.root_chord - (arpel.setback + (row)*(arpel.pel_width + arpel.pel_sep) \
-                    + arpel.pel_width/2)
-                if arpel.state_array[row][col]:
-                    x = arpel.pel_sep + arpel.pel_width/2 + \
-                        col*(arpel.pel_width + arpel.pel_sep)
+        y, x = arpel.root_chord - arpel.setback + arpel.pel_width/2,\
+                arpel.pel_sep - arpel.pel_width/2
+        for row in arpel.state_array:
+            y -= arpel.pel_width + arpel.pel_sep
+            for pel in row:
+                if pel:
+                    x += arpel.pel_width + arpel.pel_sep
                     pel_locs.append((x,y))
-
+            x = 0
+        print(pel_locs)
         #dummy initial thrusts
-        u, v = zip(*[(arpel.state_array[i][j].thrust.real,
-                    arpel.state_array[i][j].thrust.imag)\
-                    for j in range(arpel.no_of_columns)\
-                    for i in range(arpel.no_of_rows)\
-                    if arpel.state_array[i][j]])
-        print(u,v)
-        #put thrusts on screen
+        # u, v = zip(*[(pel.thrust.real, pel.thrust.imag) \
+        #     for row in arpel.state_array for pel in row if pel])
+
+        u,v = 0,1
+
+       # put thrusts on screen
         xs, ys = zip(*pel_locs)
         Q = ax.quiver(xs, ys, u ,v , pivot='mid', color='r', units='inches')
 
-
+        print(f'built test display in {time()-t1} seconds')
         plt.show()
 
 

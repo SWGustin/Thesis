@@ -65,7 +65,7 @@ class PEL:
         self._noOfSwitches = noOfSwitches
         self._thrust = 0+0j
         self._primaryDirection = primaryDirection
-        self._initialized = False
+        self._initialized = True
         self._frequency = 100
         self._switches = [Switch() for _ in range(self._noOfSwitches)]
         self._total_width = totalWidth
@@ -144,20 +144,25 @@ class ArPel:
         self._no_of_columns = int(np.floor((self._span - self._pel_sep)/(self._pel_width + self._pel_sep)))
         
         #create matrix of PELs
-        self._state_array = [[PEL(_pel_cardinality,self._pel_width, _cardinal_offset)     
-                            for _ in range(self._no_of_columns)] for x in range(self._no_of_rows)]
+        self._state_array = []
+        # self._state_array = [[PEL(_pel_cardinality,self._pel_width, _cardinal_offset)     
+        #                     for _ in range(self._no_of_columns)] for x in range(self._no_of_rows)]
 
-        _trailing_edge_sweep_angle = (tip_offset + _tip_chord - self._root_chord)/self._span
-        
+        tan_trailing_angle = (self._root_chord - tip_offset - _tip_chord )/self._span
+        tan_leading_angle = np.tan(np.radians(_sweep_angle))
         #initialize elements that are in bounds
-        for row in range(len(self._state_array)):
-            row_set_back = row * (self._pel_sep + self._pel_width) + self._set_back
-            for col in range(len(self._state_array[0])):
-                width = self._pel_sep + col * (self._pel_width + self._pel_sep)
-                if not ((np.tan(np.radians(_sweep_angle)) * width < row_set_back) \
-                    and self._root_chord + width * _trailing_edge_sweep_angle > \
-                    row_set_back + self._pel_width ):
-                    self._state_array[row][col] = None
+        row_set_back = self._set_back - self._pel_sep - self._pel_width
+        for rn in range(self._no_of_rows):
+            row = []
+            row_set_back += self._pel_sep + self._pel_width
+            width = -self._pel_width
+            for _ in range(self._no_of_columns):
+                width += self._pel_width + self._pel_sep
+                if ((tan_leading_angle * width < row_set_back) \
+                    and ((width * tan_trailing_angle) < \
+                    self.root_chord - row_set_back - self._pel_width)):
+                        row.append(PEL(_pel_cardinality,self._pel_width, _cardinal_offset))
+            self.state_array.append(row)
 
         for row in self._state_array[::-1]:
             if not any(row):
