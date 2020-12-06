@@ -68,6 +68,7 @@ class PEL:
         self._initialized = False
         self._frequency = 100
         self._switches = [Switch() for _ in range(self._noOfSwitches)]
+        self._total_width = totalWidth
         PEL.addConversionMatrix(self._noOfSwitches,self._primaryDirection)
 
     def __repr__(self):
@@ -121,46 +122,66 @@ class ArPel:
             data = json.load(f)
         
         self._span = data['wing_geometry']['span']/2
-        _root_chord = data['wing_geometry']['root_chord']
+        self._root_chord = data['wing_geometry']['root_chord']
         _tip_chord = data['wing_geometry']['tip_chord']
         _sweep_angle = data['wing_geometry']['sweep_angle']
-        _pel_width = data['pel_geometry']['overall_width']
-        _pel_sep = data['pel_geometry']['seperation']
+        self._pel_width = data['pel_geometry']['overall_width']
+        self._pel_sep = data['pel_geometry']['seperation']
         _pel_cardinality = data['pel_geometry']['number_of_switches']
         _cardinal_offset = data['pel_geometry']['primary_direction']
-        _set_back = data['wing_geometry']['set_back']
+        self._set_back = data['wing_geometry']['set_back']
 
-        self._geometry = [(0,_root_chord)]
+        self._geometry = [(0,self._root_chord)]
         # get corners of basic wing
         tip_offset = self._span*np.tan(np.radians(_sweep_angle))
-        self._geometry.append((self._span, _root_chord - tip_offset))
+        self._geometry.append((self._span, self._root_chord - tip_offset))
         self._geometry.append((self._span,self._geometry[1][1]-_tip_chord))
         self._geometry.append((0,0))
 
         # build an array of PELs
-        self._max_chord = max(_root_chord, tip_offset + _tip_chord)
-        self._no_of_rows = int(np.floor((self._max_chord)/(_pel_width + _pel_sep)))
-        self._no_of_columns = int(np.floor((self._span - _pel_sep)/(_pel_width + _pel_sep)))
+        self._max_chord = max(self._root_chord, tip_offset + _tip_chord)
+        self._no_of_rows = int(np.floor((self._max_chord)/(self._pel_width + self._pel_sep)))
+        self._no_of_columns = int(np.floor((self._span - self._pel_sep)/(self._pel_width + self._pel_sep)))
         
         #create matrix of PELs
-        self._state_array = [[PEL(_pel_cardinality,_pel_width, _cardinal_offset)     
+        self._state_array = [[PEL(_pel_cardinality,self._pel_width, _cardinal_offset)     
                             for _ in range(self._no_of_columns)] for x in range(self._no_of_rows)]
 
-        _trailing_edge_sweep_angle = (tip_offset + _tip_chord - _root_chord)/self._span
+        _trailing_edge_sweep_angle = (tip_offset + _tip_chord - self._root_chord)/self._span
         
         #initialize elements that are in bounds
         for row in range(len(self._state_array)):
-            row_set_back = row * (_pel_sep + _pel_width) + _set_back
+            row_set_back = row * (self._pel_sep + self._pel_width) + self._set_back
             for col in range(len(self._state_array[0])):
-                width = _pel_sep + col * (_pel_width + _pel_sep)
+                width = self._pel_sep + col * (self._pel_width + self._pel_sep)
                 if not ((np.tan(np.radians(_sweep_angle)) * width < row_set_back) \
-                    and _root_chord + width * _trailing_edge_sweep_angle > \
-                    row_set_back + _pel_width ):
+                    and self._root_chord + width * _trailing_edge_sweep_angle > \
+                    row_set_back + self._pel_width ):
                     self._state_array[row][col] = None
 
         for row in self._state_array[::-1]:
             if not any(row):
                 del(row)
+
+    @property
+    def state_array(self):
+        return self._state_array
+
+    @property
+    def pel_width(self):
+        return self._pel_width
+
+    @property
+    def root_chord(self):
+        return self._root_chord
+
+    @property
+    def pel_sep(self):
+        return self._pel_sep
+
+    @property
+    def setback(self):
+        return self._set_back
 
     @property
     def max_chord(self):
@@ -204,6 +225,8 @@ class ArPel:
         x, y = var
         return self._state_array[y][x]
 
+
+##quick test codes
 
 if __name__ == '__main__':
 

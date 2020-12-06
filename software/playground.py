@@ -14,35 +14,6 @@ print(f'built test arpel in: {time.time()-t1} seconds')
 t2 =time.time()
 tview = view.Display(tarpel)
 
-
-# config_file_name = 'config.json'
-# config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + '\\MVC\\View\\' + config_file_name
-
-# ##this gets the corners ofthe wing
-# #def corners
-# with open(config_path, 'r') as f:
-#     reader = json.load(f)
-
-# geometry = reader['wing_geometry']    
-# print(geometry)
-# corners = [(0,geometry['root_chord'])]
-# tip_setback = -int(geometry['span'] / 2 * np.sin(np.radians(geometry['sweep_angle'])))
-# corners.append([geometry['span'] / 2, geometry['root_chord'] + tip_setback])
-# corners.append([geometry['span'] / 2, geometry['root_chord'] + tip_setback - geometry['tip_chord']])
-# corners.append([0,0])
-
-# print(corners)
-#end corners func
-
-
-
-# ##make an arpel
-# apel = model.ArPel('config.json')
-
-# coord = corners
-# xs, ys = zip(*coord) #create lists of x and y values
-
-
 # #setup canvas
 # fig, ax = plt.subplots(1,1)
 # #put shape on subplot
