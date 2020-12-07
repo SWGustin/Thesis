@@ -59,7 +59,7 @@ class PEL:
         
         PEL.conversion_matrices[outer_key] = inner_vals
 
-    def __init__(self, noOfSwitches, totalWidth, primaryDirection = 0):
+    def __init__(self, ID, noOfSwitches, totalWidth, primaryDirection = 0):
         if noOfSwitches < 3:
             raise BasisVectorError("The minimum number of Low Voltage Elements for a additively closed space is 3")
         self._noOfSwitches = noOfSwitches
@@ -69,10 +69,15 @@ class PEL:
         self._frequency = 100
         self._switches = [Switch() for _ in range(self._noOfSwitches)]
         self._total_width = totalWidth
+        self._ID = ID
         PEL.addConversionMatrix(self._noOfSwitches,self._primaryDirection)
 
     def __repr__(self):
         return str(self._thrust)
+
+    @property
+    def ID(self):
+        return self._ID
 
     @property
     def initialized(self):
@@ -121,14 +126,18 @@ class ArPel:
         with open(config_path, 'r') as f:
             data = json.load(f)
         
-        self._span = data['wing_geometry']['span']/2
-        self._root_chord = data['wing_geometry']['root_chord']
+        self._current_row = 0
+        self._current_col = -1
+
         _tip_chord = data['wing_geometry']['tip_chord']
         _sweep_angle = data['wing_geometry']['sweep_angle']
-        self._pel_width = data['pel_geometry']['overall_width']
-        self._pel_sep = data['pel_geometry']['seperation']
         _pel_cardinality = data['pel_geometry']['number_of_switches']
         _cardinal_offset = data['pel_geometry']['primary_direction']
+        self._span = data['wing_geometry']['span']/2
+        self._root_chord = data['wing_geometry']['root_chord']
+        self._pel_width = data['pel_geometry']['overall_width']
+        self._pel_sep = data['pel_geometry']['seperation']
+
         self._set_back = data['wing_geometry']['set_back']
 
         self._geometry = [(0,self._root_chord)]
@@ -139,8 +148,8 @@ class ArPel:
         self._geometry.append((0,0))
 
         # build an array of PELs
-        self._max_chord = max(self._root_chord, tip_offset + _tip_chord)
-        self._no_of_rows = int(np.floor((self._max_chord)/(self._pel_width + self._pel_sep)))
+        _max_chord = max(self._root_chord, tip_offset + _tip_chord)
+        self._no_of_rows = int(np.floor((_max_chord)/(self._pel_width + self._pel_sep)))
         self._no_of_columns = int(np.floor((self._span - self._pel_sep)/(self._pel_width + self._pel_sep)))
         
         #create matrix of PELs
@@ -149,6 +158,7 @@ class ArPel:
         tan_leading_angle = np.tan(np.radians(_sweep_angle))
         #initialize elements that are in bounds
         row_set_back = self._set_back - self._pel_sep - self._pel_width
+        self._no_of_pels = 0
         for rn in range(self._no_of_rows):
             row = []
             row_set_back += self._pel_sep + self._pel_width
@@ -158,7 +168,8 @@ class ArPel:
                 if ((tan_leading_angle * width < row_set_back) \
                     and ((width * tan_trailing_angle) < \
                     self.root_chord - row_set_back - self._pel_width)):
-                        row.append(PEL(_pel_cardinality,self._pel_width, _cardinal_offset))
+                        row.append(PEL(self._no_of_pels, _pel_cardinality, self._pel_width, _cardinal_offset))
+                        self._no_of_pels +=1
             self.state_array.append(row)
 
         for row in self._state_array[::-1]:
@@ -166,12 +177,25 @@ class ArPel:
                 del(row)
 
     def __getitem__(self, indx):
-        try:
             x,y = indx
             return self.state_array[y][x]
-        except TypeError:
-            x = indx
-            return self.state_array[x]
+            
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            self._current_col += 1
+            return self.state_array[self._current_row][self._current_col]
+        except IndexError:
+            try:
+                self._current_row += 1
+                self._current_col = 0
+                return self.state_array[self._current_row][self._current_col] 
+            except IndexError:
+                self._current_row = 0
+                self._current_col = -1
+                raise StopIteration
 
     @property
     def state_array(self):
@@ -192,10 +216,6 @@ class ArPel:
     @property
     def setback(self):
         return self._set_back
-
-    @property
-    def max_chord(self):
-        return self._max_chord
     
     @property
     def geometry(self):

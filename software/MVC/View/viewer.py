@@ -35,10 +35,9 @@ class Display:
                     pel_locs.append((x,y))
             x = 0
         #dummy initial thrusts
-        # u, v = zip(*[(pel.thrust.real, pel.thrust.imag) \
-        #     for row in arpel.state_array for pel in row if pel])
-
-        u,v = 0,1
+        u, v = zip(*[(pel.thrust.real, pel.thrust.imag) \
+            for pel in arpel])
+        
 
        # put thrusts on screen
         xs, ys = zip(*pel_locs)
@@ -69,5 +68,4 @@ class Display:
 
 ##quick test codes
 if __name__ == '__main__':
-    config_file_name = 'config.json'
-    config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + '\\' + config_file_name
+    print('pass')
