@@ -1,1 +1,1 @@
-tarpel = model.ArPel('config.json')
+e

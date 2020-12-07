@@ -17,4 +17,7 @@ t1 = time.time()
 tcont = controller.Controller(_model, _view)
 print(f'built test controller in: {time.time()-t1} seconds')
 tcont.display.animate()
+tcont.flow = 1+1j
+
+print(tcont.model.state_array)
 tcont.display.show()
