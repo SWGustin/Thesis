@@ -2,122 +2,8 @@ import os
 import json 
 import numpy as np
 import time
+from .pel import PEL as PEL
 
-class BasisVectorError(Exception):
-    pass
-
-class Switch:
-    def __init__(self, *,freq = 1000, pow = 0):
-        self._dutyCycle = pow
-        self._frequency = freq
-        #self._basisVector = 0 + 0j
-
-    @property
-    def dutyCycle(self):
-        return self._dutyCycle
-    
-    @dutyCycle.setter
-    def dutyCycle(self, dc):
-        self._dutyCycle = max(min(100, dc), 0)
-
-    @property
-    def frequency(self):
-        return self._frequency
-
-    @frequency.setter
-    def frequency(self, Hz):
-        self._frequency = Hz
-
-    def __repr__(self):
-        return f'(power, frequency) = ({self._dutyCycle}, {self._frequency})'
-
-
-class PEL:
-    conversion_matrices = dict()
-
-    @classmethod
-    def calc_BVs(PEL, no_switches, primary_dir):
-        _basis_angles = [((360/no_switches * i) + primary_dir)%360 for i in range(no_switches)]
-        return [(np.cos(np.radians(x)),np.sin(np.radians(x))) for x in _basis_angles]
-    
-    @classmethod
-    def calc_Conversion_matrix(PEL, V1,V2):
-        bv = [[V1[0], V2[0]],[V1[1], V2[1]]]
-        return np.linalg.inv(bv)
-
-    @classmethod
-    def addConversionMatrix(PEL, no_switches, primary_dir):
-        outer_key = (no_switches, primary_dir)
-        if outer_key in PEL.conversion_matrices.keys():
-            return
-        inner_vals = []#this needs to be an array of conversion matrices
-        BVs = PEL.calc_BVs(no_switches, primary_dir)
-        for i in range(no_switches):
-            v1= BVs[i]
-            v2 = BVs[((i+1)%no_switches)]
-            inner_vals.append(PEL.calc_Conversion_matrix(v1,v2))
-        
-        PEL.conversion_matrices[outer_key] = inner_vals
-
-    def __init__(self, ID, noOfSwitches, totalWidth, primaryDirection = 0):
-        if noOfSwitches < 3:
-            raise BasisVectorError("The minimum number of Low Voltage Elements for a additively closed space is 3")
-        self._noOfSwitches = noOfSwitches
-        self._thrust = 0+0j
-        self._primaryDirection = primaryDirection
-        self._initialized = True
-        self._frequency = 100
-        self._switches = [Switch() for _ in range(self._noOfSwitches)]
-        self._total_width = totalWidth
-        self._ID = ID
-        PEL.addConversionMatrix(self._noOfSwitches,self._primaryDirection)
-
-    def __repr__(self):
-        return str(self._thrust)
-
-    @property
-    def ID(self):
-        return self._ID
-
-    @property
-    def initialized(self):
-        return self._initialized
-
-    @initialized.setter
-    def initialized(self, val):
-        self._initialized = val
-        if not self._initialized:
-            self._thrust = -1
-
-    @property
-    def frequency(self):
-        return self._frequency
-
-    @frequency.setter
-    def frequency(self, Hz):
-        self._frequency = max(0,Hz)
-
-    @property
-    def thrust(self):
-        return self._thrust
-    
-    @thrust.setter
-    def thrust(self, val):
-        correction = abs(val)
-        if correction > 1:
-            val = val / correction
-            correction = 1
-        self._thrust = val
-        thrust_hash = int((np.degrees(np.angle(val))%360)//(360/self._noOfSwitches))
-        convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
-        local_thrust = np.matmul(convert, [self._thrust.real,self._thrust.imag])
-        local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
-        for s, t in zip(self._switches, local_thrust):
-            s.dutyCycle = t
-
-    @property
-    def switches(self):
-        return self._switches
 
 class ArPel:
     def __init__(self, config_file_name):
@@ -167,7 +53,7 @@ class ArPel:
                 width += self._pel_width + self._pel_sep
                 if ((tan_leading_angle * width < row_set_back) \
                     and ((width * tan_trailing_angle) < \
-                    self.root_chord - row_set_back - self._pel_width)):
+                    self.root_chord - row_set_back - self.pel_sep - self._pel_width)):
                         row.append(PEL(self._no_of_pels, _pel_cardinality, self._pel_width, _cardinal_offset))
                         self._no_of_pels +=1
             self.state_array.append(row)
