@@ -7,22 +7,19 @@ from matplotlib import animation
 from random import random
 
 class Display:
-    
-    @classmethod
-    def animate(Display, num, Q, U, V):
-        U = [max(-1,min(u + random()/10-0.5,1)) for u in V]
-        V = [max(-1,min(v + random()/10-0.5,1)) for v in V]
 
+    def animate(num, Q, arpel):
+        test = [pel.thrust + complexrandn(-1-j,1+j) for pel in arpel]
+        U, V = zip(*[(pel.thrust.real, pel.thrust.imag) for pel in test])
         Q.set_UVC(U,V)
-
         return Q,
 
     def __init__(self, arpel=None):
         t1  = time()
         geometry = arpel.geometry
         geometry.append(geometry[0])
-        fig, ax = plt.subplots(1,1)
         xs, ys = zip(*geometry)
+        fig, ax = plt.subplots(1,1)
         plt.plot(xs,ys)
         pel_locs = []
         y, x = arpel.root_chord - arpel.setback + arpel.pel_width/2,\
@@ -35,19 +32,25 @@ class Display:
                     pel_locs.append((x,y))
             x = 0
         #dummy initial thrusts
-        u, v = zip(*[(pel.thrust.real, pel.thrust.imag) \
-            for pel in arpel])
-        
-
-       # put thrusts on screen
+        u, v = zip(*[(pel.thrust.real-0.25, pel.thrust.imag-0.25) for pel in arpel])
+        # put thrusts on screen
         xs, ys = zip(*pel_locs)
-        Q = ax.quiver(xs, ys, u ,v , pivot='mid', color='r', units='inches')
+        Q = ax.quiver(xs, ys, u, v, pivot='tail', color='r', units='inches', scale = 3)
         plt.plot(xs, ys, 'bx')
         print(f'built test display in {time()-t1} seconds')
 
-        anim = animation.FuncAnimation(fig, Display.animate, fargs=(Q, xs, ys),
+        anim = animation.FuncAnimation(fig, Display.animate, fargs=(Q, arpel),
                                interval=50, blit=False)
         plt.show()
+    
+
+
+
+
+
+
+
+
 
 
 

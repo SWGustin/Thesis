@@ -13,4 +13,3 @@ tarpel = model.ArPel('config.json')
 print(f'built test arpel in: {time.time()-t1} seconds')
 t2 =time.time()
 tview = view.Display(tarpel)
-

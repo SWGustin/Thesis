@@ -1,1 +1,1 @@
-fig, ax = plt.subplots(1,1)
+tarpel = model.ArPel('config.json')
