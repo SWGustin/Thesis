@@ -43,7 +43,7 @@ class PEL:
         self._thrust = 0+0j
         self._primaryDirection = primaryDirection
         self._frequency = 100
-        self._rad_per_switch = 2*np.pi/self._noOfSwitches
+        self._rad_per_switch = np.round(2*np.pi/self._noOfSwitches,6)
         self._switches = [Switch() for _ in range(self._noOfSwitches)]
         self._total_width = totalWidth
         self._ID = ID
@@ -72,13 +72,11 @@ class PEL:
     def thrust(self, val):
         correction = abs(val)
         if correction > 1:
-            val = val / correction
-            correction = 1
+            val /= correction
         self._thrust = val
-        thrust_hash = int((np.angle(val)%6.283185307179586)//self._rad_per_switch)
+        thrust_hash = int((np.angle(val)%6.283185)//self._rad_per_switch)
         convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
         local_thrust = np.matmul(convert, [self._thrust.real,self._thrust.imag])
-        #local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
         for s, t in zip(self._switches, local_thrust):
             s.dutyCycle = t
 
