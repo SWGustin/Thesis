@@ -18,18 +18,17 @@ class Display:
         plt.ion()
         pel_locs = []
         y, x = arpel.root_chord - arpel.setback + arpel.pel_width/2, 0 
-        #arpel.pel_sep - arpel.pel_width/2
         for row in arpel.state_array:
             y -= arpel.pel_width + arpel.pel_sep
             for pel in row:
+                x += arpel.pel_width + arpel.pel_sep
                 if pel:
-                    x += arpel.pel_width + arpel.pel_sep
                     pel_locs.append((x,y))
                     ax.add_patch(patches.Rectangle((x-pel.width/2,y-pel.width/2), pel.width, 
                         pel.width, fc = 'none', ec = 'b', lw = 1))
             x = 0
         #dummy initial thrusts
-        u, v = zip(*[(pel.thrust.real, pel.thrust.imag) for pel in arpel])
+        u, v = zip(*[(pel.thrust.real, pel.thrust.imag) for pel in arpel if pel])
         # put thrusts on screen
         xs, ys = zip(*pel_locs)
         self.Q = ax.quiver(xs, ys, u, v, pivot='tail', color='r', units='inches', scale = 3)
