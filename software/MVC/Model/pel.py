@@ -42,8 +42,8 @@ class PEL:
         self._noOfSwitches = noOfSwitches
         self._thrust = 0+0j
         self._primaryDirection = primaryDirection
-        self._initialized = True
         self._frequency = 100
+        self._rad_per_switch = 2*np.pi/self._noOfSwitches
         self._switches = [Switch() for _ in range(self._noOfSwitches)]
         self._total_width = totalWidth
         self._ID = ID
@@ -55,16 +55,6 @@ class PEL:
     @property
     def ID(self):
         return self._ID
-
-    @property
-    def initialized(self):
-        return self._initialized
-
-    @initialized.setter
-    def initialized(self, val):
-        self._initialized = val
-        if not self._initialized:
-            self._thrust = -1
 
     @property
     def frequency(self):
@@ -85,10 +75,10 @@ class PEL:
             val = val / correction
             correction = 1
         self._thrust = val
-        thrust_hash = int((np.degrees(np.angle(val))%360)//(360/self._noOfSwitches))
+        thrust_hash = int((np.angle(val)%6.283185307179586)//self._rad_per_switch)
         convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
         local_thrust = np.matmul(convert, [self._thrust.real,self._thrust.imag])
-        local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
+        #local_thrust = local_thrust/np.linalg.norm(local_thrust)*correction
         for s, t in zip(self._switches, local_thrust):
             s.dutyCycle = t
 

@@ -9,13 +9,13 @@ from random import random
 class Display:
 
     def __init__(self, arpel=None):
-        plt.ion() TODO: figure this out
-        self.arpel =    arpel
+        self.arpel = arpel
         geometry = arpel.geometry
         geometry.append(geometry[0])
         xs, ys = zip(*geometry)
         self.fig, ax = plt.subplots(1,1)
         plt.plot(xs,ys)
+        plt.ion()
         pel_locs = []
         y, x = arpel.root_chord - arpel.setback + arpel.pel_width/2, 0 
         #arpel.pel_sep - arpel.pel_width/2
@@ -33,20 +33,13 @@ class Display:
         # put thrusts on screen
         xs, ys = zip(*pel_locs)
         self.Q = ax.quiver(xs, ys, u, v, pivot='tail', color='r', units='inches', scale = 3)
-        plt.plot(xs, ys, 'bx')
         plt.gca().set_aspect('equal', adjustable='box')
-
         
+
     def update(self):
         U, V = zip(*[(pel.thrust.real, pel.thrust.imag) for pel in self.arpel])
         self.Q.set_UVC(U,V)
-        return self.Q,
-
-    def animate(self):
-        self.update()
-#        anim = animation.FuncAnimation(self.fig, self._animate_helper, fargs=(self.Q, self.arpel),
-#                               interval=50, blit=False)
-        plt.plot()
-
-    def show(self):
         plt.show()
+        plt.pause(0.001)
+
+        

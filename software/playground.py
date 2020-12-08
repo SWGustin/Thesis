@@ -1,22 +1,14 @@
-# put the code to run a demo of it all in here
+import timeit
+import numpy as np
 
-from matplotlib import pyplot as plt
-from matplotlib import animation
+setup = '''import random
 import MVC.Model.object_model as model
-import MVC.View.viewer as view
-import MVC.Controller.controller as controller
-import time
+tarpl = model.ArPel('config.json')
+'''
 
-t1 = time.time()
-_model = model.ArPel('config.json')
-print(f'built test model in: {time.time()-t1} seconds')
-t1 = time.time()
-_view = view.Display(_model)
-print(f'built test display in: {time.time()-t1} seconds')
-_view.animate()
-time.sleep(1)
-print('here')
-for pel in _model:
-    pel.thrust = 1+1j
-_view.animate()
-_view.show()
+print(timeit.timeit("tarpl[0,0].thrust = 1+1j", setup = setup, number = 100000))
+
+#timeit.timeit("tpel.thrust = 1+1j", setup = setup, number = 100)
+print(2*np.pi)
+
+

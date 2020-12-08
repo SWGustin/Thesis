@@ -1,8 +1,8 @@
 import os
 import json 
 import numpy as np
-from .pel import PEL as PEL
-
+import time
+from .pel import PEL
 
 class ArPel:
     def __init__(self, config_file_name):
@@ -11,8 +11,8 @@ class ArPel:
         with open(config_path, 'r') as f:
             data = json.load(f)
         
-        self._current_row = 0
-        self._current_col = -1
+        self.itr = None
+        self._current_row = -1
 
         _tip_chord = data['wing_geometry']['tip_chord']
         _sweep_angle = data['wing_geometry']['sweep_angle']
@@ -70,16 +70,14 @@ class ArPel:
 
     def __next__(self):
         try:
-            self._current_col += 1
-            return self.state_array[self._current_row][self._current_col]
-        except IndexError:
+            return next(self.itr)
+        except (StopIteration, TypeError):
             try:
                 self._current_row += 1
-                self._current_col = 0
-                return self.state_array[self._current_row][self._current_col] 
-            except IndexError:
-                self._current_row = 0
-                self._current_col = -1
+                self.itr = iter(self.state_array[self._current_row])
+                return next(self.itr) 
+            except StopIteration:
+                self._current_row = -1
                 raise StopIteration
 
     @property
@@ -152,3 +150,5 @@ if __name__ == '__main__':
     print(f'max number of pels is : {test.no_of_rows*test.no_of_columns}')
     print(f'built arpel in {t2-t} seconds')
     print(PEL.conversion_matrices)
+
+    
