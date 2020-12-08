@@ -49,7 +49,7 @@ class ArPel:
             width = self.pel_width*2
             while width < self._span:
                 behind_leading = (width*tan_leading_angle<row_set_back)
-                before_trailing = (width*tan_trailing_angle < (self._root_chord - row_set_back))
+                before_trailing = (width*tan_trailing_angle < (self._root_chord - row_set_back - self.pel_width))
                 if behind_leading:
                     if before_trailing:
                         row.append(PEL(self._no_of_pels, _pel_cardinality, self._pel_width, _cardinal_offset))
