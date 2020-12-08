@@ -22,9 +22,7 @@ class ArPel:
         self._root_chord = data['wing_geometry']['root_chord']
         self._pel_width = data['pel_geometry']['overall_width']
         self._pel_sep = data['pel_geometry']['seperation']
-
         self._set_back = data['wing_geometry']['set_back']
-
         self._geometry = [(0,self._root_chord)]
         # get corners of basic wing
         tip_offset = self._span*np.tan(np.radians(_sweep_angle))
@@ -44,18 +42,23 @@ class ArPel:
         #initialize elements that are in bounds
         row_set_back = self._set_back - self._pel_sep - self._pel_width
         self._no_of_pels = 0
-        for rn in range(self._no_of_rows):
+        
+        while row_set_back < _max_chord-self.pel_width - self.pel_sep - self._set_back:
             row = []
             row_set_back += self._pel_sep + self._pel_width
-            width = -self._pel_width
-            for _ in range(self._no_of_columns):
-                width += self._pel_width + self._pel_sep
-                if ((tan_leading_angle * width < row_set_back) \
-                    and ((width * tan_trailing_angle) < \
-                    self.root_chord - row_set_back - self.pel_sep - self._pel_width)):
+            width = self.pel_width*2
+            while width < self._span:
+                behind_leading = (width*tan_leading_angle<row_set_back)
+                before_trailing = (width*tan_trailing_angle < (self._root_chord - row_set_back))
+                if behind_leading:
+                    if before_trailing:
                         row.append(PEL(self._no_of_pels, _pel_cardinality, self._pel_width, _cardinal_offset))
-                        self._no_of_pels +=1
-            self.state_array.append(row)
+                    else:
+                        row.append(0)
+                width += self.pel_width + self.pel_sep
+ 
+            if any(row):
+                self.state_array.append(row)
 
         for row in self._state_array[::-1]:
             if not any(row):
@@ -75,8 +78,11 @@ class ArPel:
             try:
                 self._current_row += 1
                 self.itr = iter(self.state_array[self._current_row])
-                return next(self.itr) 
-            except StopIteration:
+                nxt = None
+                while not nxt:
+                    nxt = next(self.itr)
+                return nxt
+            except (StopIteration, IndexError):
                 self._current_row = -1
                 raise StopIteration
 
@@ -117,20 +123,13 @@ class ArPel:
         return self._no_of_columns
 
     def __repr__(self):
-        print("The array has initialized element:")
-        for i in self._state_array:
-            for p in i:
-                if p:
-                    print(p.initialized, end = ' ')
-                else:
-                    print('    ', end = ' ')
-            print('')
-        print()
         print("Thrust vectors are as follows")
         for i in self._state_array:
             for j in i:
                 if j :
                     print(j, end = ' ')
+                else: 
+                    print(' . ', end = '')
             print()
         return ''
 
@@ -139,16 +138,6 @@ class ArPel:
         return self._state_array[y][x]
 
 
-##quick test codes
-
-if __name__ == '__main__':
-
-    t = time.time()
-    test = ArPel('config.json')
-    t2 = time.time()
-    print(test)
-    print(f'max number of pels is : {test.no_of_rows*test.no_of_columns}')
-    print(f'built arpel in {t2-t} seconds')
-    print(PEL.conversion_matrices)
-
-    
+if __name__ == "__main__":
+    tarpl = ArPel('config.json')
+    print(tarpl)

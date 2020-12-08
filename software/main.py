@@ -21,18 +21,14 @@ print(f'built test controller in: {time.time()-t1} seconds')
 cntr,frames = 0,0
 t1 = time.time()
 
-test_itr = iter(test_list)
-
 while True:
     frames +=1
     t = time.time()
     for pel in _model:
-        pel.thrust = 1 +1j
+        pel.thrust += complex((random.random()*2-1)/10, (random.random()*2-1)/10)
         cntr+=1
     
-    if (t-t1)>= 5:
-        pass
-        _view.update()
+    _view.update()
 
     if t-t1 >= 5:
         print(f'framerate is: {frames/(t-t1)}')

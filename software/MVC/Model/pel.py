@@ -77,6 +77,7 @@ class PEL:
         thrust_hash = int((np.angle(val)%6.283185)//self._rad_per_switch)
         convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
         local_thrust = np.matmul(convert, [self._thrust.real,self._thrust.imag])
+        local_thrust /= max(np.linalg.norm(local_thrust),1)
         for s, t in zip(self._switches, local_thrust):
             s.dutyCycle = t
 

@@ -40,6 +40,6 @@ class Display:
         U, V = zip(*[(pel.thrust.real, pel.thrust.imag) for pel in self.arpel])
         self.Q.set_UVC(U,V)
         plt.show()
-        plt.pause(0.001)
+        plt.pause(0.00001)
 
         
