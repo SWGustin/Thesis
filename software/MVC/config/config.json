@@ -21,6 +21,9 @@
         "onColour" : [255,0,0],
         "arrowWidth" : 1,
         "maxArrowLength" : 20
+    },
+    "system" : {
+        "cores": 4
     }
 }
 

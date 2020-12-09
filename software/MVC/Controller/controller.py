@@ -14,11 +14,31 @@ class Controller:
         return self._disp
 
     @property
-    def flow(self):
+    def flow_state(self):
         return self._model.state_array
 
-    @flow.setter
+    #open loop controller
+    @flow_state.setter
     def flow(self, val):
-        if isinstance(val, numbers.Number):
+        try:
+            p, t = val
+        except ValueError:
+            t = val
+            p = self._model
+        for pel in p:
+            pass
+
+    def entrain(self, pels = None):
+        try:
+            for pel in pels:
+                self._model[pel] = 0-1j
+        except TypeError:
             for pel in self._model:
-                pel.thrust = val
+                pel.thrust = 0-1j
+
+    
+
+
+if __name__ == "__main__":
+    test = Controller(1,2)
+    test.flow = (1,2,3)
