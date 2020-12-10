@@ -65,8 +65,8 @@ class ArPel:
                 del(row)
 
     def __getitem__(self, indx):
-            x,y = indx
-            return self.state_array[y][x]
+        x,y = indx
+        return self.state_array[y][x]
             
     def __iter__(self):
         return self
@@ -85,6 +85,17 @@ class ArPel:
             except (StopIteration, IndexError):
                 self._current_row = -1
                 raise StopIteration
+
+    def __repr__(self):
+        print("Thrust vectors are as follows")
+        for i in self._state_array:
+            for j in i:
+                if j :
+                    print(j, end = ' ')
+                else: 
+                    print(' . ', end = '')
+            print()
+        return ''
 
     @property
     def state_array(self):
@@ -121,17 +132,6 @@ class ArPel:
     @property
     def no_of_columns(self):
         return self._no_of_columns
-
-    def __repr__(self):
-        print("Thrust vectors are as follows")
-        for i in self._state_array:
-            for j in i:
-                if j :
-                    print(j, end = ' ')
-                else: 
-                    print(' . ', end = '')
-            print()
-        return ''
 
     def get(self, var):
         x, y = var

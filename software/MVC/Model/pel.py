@@ -2,12 +2,11 @@
 import os
 import numpy as np
 import time
+from .switch import Switch 
+
 
 class BasisVectorError(Exception):
     pass
-
-from .switch import Switch 
-
 
 class PEL:
     conversion_matrices = dict()
@@ -74,6 +73,10 @@ class PEL:
         if correction > 1:
             val /= correction
         self._thrust = val
+        if val is 0:
+            for s in self._switches:
+                s.dutyCycle = 0
+            return
         thrust_hash = int((np.angle(val)%6.283185)//self._rad_per_switch)
         convert = PEL.conversion_matrices[(self._noOfSwitches, self._primaryDirection)][thrust_hash]
         local_thrust = np.matmul(convert, [self._thrust.real,self._thrust.imag])
