@@ -1,0 +1,29 @@
+{
+    "wing_geometry" : {
+        "root_chord" : 20,
+        "tip_chord" : 10,
+        "sweep_angle" : 45,
+        "span" : 200,
+        "set_back" : 2   
+    },
+    "pel_geometry" :{
+        "number_of_switches" : 3,
+        "overall_width" : 1,
+        "seperation" : 1,
+        "primary_direction" : 0
+    },
+    "viewer" : {
+        "refreshRate" : 10,
+        "displayTitle" : "",
+        "screenSize" : [800,600],
+        "bgColour" : [255,255,255],
+        "offColour" : [0,0,255],
+        "onColour" : [255,0,0],
+        "arrowWidth" : 1,
+        "maxArrowLength" : 20
+    },
+    "system" : {
+        "cores": 4
+    }
+}
+
