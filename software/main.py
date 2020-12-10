@@ -18,6 +18,9 @@ t1 = time.time()
 tcont = controller.Controller(_model, _view)
 print(f'built test controller in: {time.time()-t1} seconds')
 
+def set_thrust(pel):
+    pel.thrust = complex((random.random()*2-1)/10, (random.random()*2-1)/10)
+
 cntr,frames = 0,0
 t1 = time.time()
 
@@ -25,15 +28,12 @@ while True:
     frames +=1
     t = time.time()
 #    update pels etc
-    for pel in _model:
-        if pel is _model[0,0]:
-            _model[0,0].thrust += complex((random.random()*2-1)/10, (random.random()*2-1)/10)
-        cntr+=1
-    
+
+    list(map(set_thrust, _model))    
     _view.update()
 
     if t-t1 >= 5:
-        print(f'framerate is: {frames/(t-t1):.0f}')
+        print(f'framerate is: {frames/(t-t1):.2f}')
         print(f'{cntr/(time.time()-t1):.0f} pels per second!')
         t1 = time.time()
         cntr = 1
