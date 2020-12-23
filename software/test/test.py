@@ -1,16 +1,19 @@
-import sys, os
-pathadd = os.path.dirname(__file__)
-pathadd = '\\'.join(pathadd.split('\\')[:-1])+'\\MVC\\'
-print(pathadd)
-sys.path.insert(1, pathadd)
+print('test')
+import os
+import numpy
+# import sys, os
+# pathadd = os.path.dirname(__file__)
+# pathadd = '\\'.join(pathadd.split('\\')[:-1])+'\\MVC\\'
+# print(pathadd)
+# sys.path.insert(1, pathadd)
 
-from Model import object_model as model
-from View import viewer
-# from Controller import controller
-# from collections import namedtuple
+# from Model import object_model as model
+# from View import viewer
+# # from Controller import controller
+# # from collections import namedtuple
 
-print(pathadd)
-# test_Switch = parts.Switch()
+# print(pathadd)
+# # test_Switch = parts.Switch()
 
 # print(test_Switch.dutyCycle)
 # test_Switch.dutyCycle = 100
