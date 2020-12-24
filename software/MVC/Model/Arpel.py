@@ -2,7 +2,7 @@ import os
 import json 
 import numpy as np
 import time
-from .pel import PEL
+#from .pel import PEL
 
 class ArPel:
     def __init__(self, config_file_name):
@@ -10,7 +10,6 @@ class ArPel:
         config_path = '\\'.join(config_path.split('\\')[:-1]) + '\\config\\' + config_file_name
         with open(config_path, 'r') as f:
             data = json.load(f)
-        
         self.itr = None
         self._current_row = -1
 
@@ -23,46 +22,44 @@ class ArPel:
         self._pel_width = data['pel_geometry']['overall_width']
         self._pel_sep = data['pel_geometry']['seperation']
         self._set_back = data['wing_geometry']['set_back']
-        self._geometry = [(0,self._root_chord)]
+        self._anchor_point = 0,self._set_back
+
+        #handy vals to have
+        tan_sweep = np.tan(np.radians(_sweep_angle))
+        
+        def getWidth(x, RHS = True):
+            return self._pel_sep * x + self._pel_width * x +(1*RHS) 
+        
+        def getChord(y, trailing_edge = False):
+            return (self._pel_width + self.pel_sep)*y + (self._pel_width * trailing_edge)
+        
         # get corners of basic wing
-        tip_offset = self._span*np.tan(np.radians(_sweep_angle))
-        self._geometry.append((self._span, self._root_chord - tip_offset))
+        self._geometry = [(0,0)]
+        tip_offset = self._span*tan_sweep
+        self._geometry.append((self._span, -tip_offset))
         self._geometry.append((self._span,self._geometry[1][1]-_tip_chord))
         self._geometry.append((0,0))
 
-        # build an array of PELs
+        # build square thrust array boundaries
         _max_chord = max(self._root_chord, tip_offset + _tip_chord)
         self._no_of_rows = int(np.floor((_max_chord)/(self._pel_width + self._pel_sep)))
         self._no_of_columns = int(np.floor((self._span - self._pel_sep)/(self._pel_width + self._pel_sep)))
         
-        #create matrix of PELs
-        self._state_array = []
-        tan_trailing_angle = (self._root_chord - tip_offset - _tip_chord )/self._span
-        tan_leading_angle = np.tan(np.radians(_sweep_angle))
-        #initialize elements that are in bounds
-        row_set_back = self._set_back - self._pel_sep - self._pel_width
-        self._no_of_pels = 0
-        
-        while row_set_back < _max_chord-self.pel_width - self.pel_sep - self._set_back:
-            row = []
-            row_set_back += self._pel_sep + self._pel_width
-            width = self.pel_width*2
-            while width < self._span:
-                behind_leading = (width*tan_leading_angle<row_set_back)
-                before_trailing = ((width-self.pel_width*2)*tan_trailing_angle < (self._root_chord - row_set_back - self.pel_width))
-                if behind_leading:
-                    if before_trailing:
-                        row.append(PEL(self._no_of_pels, _pel_cardinality, self._pel_width, _cardinal_offset))
-                    else:
-                        row.append(0)
-                width += self.pel_width + self.pel_sep
- 
-            if any(row):
-                self.state_array.append(row)
+        tan_trailing_sweep = (-self._root_chord - (tip_offset + _tip_chord))/self._span
 
-        for row in self._state_array[::-1]:
-            if not any(row):
-                del(row)
+        #create a numpy array init to 2
+        self._state_array = np.ones((self._no_of_rows, self._no_of_columns))*2
+
+        #set valid elemetns to 0.f
+        for y in range(self._no_of_rows):
+            row_y = getChord(y)
+            for x in range(self._no_of_columns):
+                if getWidth(x) * tan_sweep < row_y and self._root_chord - getWidth(x) * tan_trailing_sweep > row_y:
+                    self._state_array[y,x] = 0.0
+
+        print(self._state_array)
+
+
 
     def __getitem__(self, indx):
         x,y = indx
@@ -140,4 +137,3 @@ class ArPel:
 
 if __name__ == "__main__":
     tarpl = ArPel('config.json')
-    print(tarpl)
