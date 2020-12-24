@@ -49,7 +49,10 @@ class PEL:
         PEL.addConversionMatrix(self._noOfSwitches,self._primaryDirection)
 
     def __repr__(self):
-        return str(self._thrust)
+        if self._thrust != 2:
+            return str(self._thrust)
+        else:
+            return '    '
 
     @property
     def ID(self):
@@ -67,6 +70,9 @@ class PEL:
     def thrust(self):
         return self._thrust
     
+    #should be jit-ed for numba integration
+    #TODO: no more angle, calc normalized vect and check that in square co-ords
+    #TODO: no more matmul,  do it by hand its faster
     @thrust.setter
     def thrust(self, val):
         correction = abs(val)

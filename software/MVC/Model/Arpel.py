@@ -6,6 +6,7 @@ import time
 
 class ArPel:
     def __init__(self, config_file_name):
+        print('initializing ARPEL')
         config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))  
         config_path = '\\'.join(config_path.split('\\')[:-1]) + '\\config\\' + config_file_name
         with open(config_path, 'r') as f:
@@ -45,10 +46,11 @@ class ArPel:
         self._no_of_rows = int(np.floor((_max_chord)/(self._pel_width + self._pel_sep)))
         self._no_of_columns = int(np.floor((self._span - self._pel_sep)/(self._pel_width + self._pel_sep)))
         
-        tan_trailing_sweep = (-self._root_chord - (tip_offset + _tip_chord))/self._span
+        tan_trailing_sweep = (self._root_chord - (tip_offset + _tip_chord))/self._span
 
         #create a numpy array init to 2
         self._state_array = np.ones((self._no_of_rows, self._no_of_columns))*2
+        self._no_of_pels = 0
 
         #set valid elemetns to 0.f
         for y in range(self._no_of_rows):
@@ -56,10 +58,7 @@ class ArPel:
             for x in range(self._no_of_columns):
                 if getWidth(x) * tan_sweep < row_y and self._root_chord - getWidth(x) * tan_trailing_sweep > row_y:
                     self._state_array[y,x] = 0.0
-
-        print(self._state_array)
-
-
+                    self._no_of_pels +=1
 
     def __getitem__(self, indx):
         x,y = indx
@@ -75,8 +74,8 @@ class ArPel:
             try:
                 self._current_row += 1
                 self.itr = iter(self.state_array[self._current_row])
-                nxt = None
-                while not nxt:
+                nxt = 2
+                while nxt == 2:
                     nxt = next(self.itr)
                 return nxt
             except (StopIteration, IndexError):
@@ -87,12 +86,16 @@ class ArPel:
         print("Thrust vectors are as follows")
         for i in self._state_array:
             for j in i:
-                if j :
+                if j != 2 :
                     print(j, end = ' ')
                 else: 
-                    print(' . ', end = '')
+                    print('    ', end = '')
             print()
         return ''
+
+    @property
+    def no_of_pels(self):
+        return self._no_of_pels
 
     @property
     def state_array(self):

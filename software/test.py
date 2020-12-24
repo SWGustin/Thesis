@@ -1,6 +1,22 @@
-print('test')
 import os
 import numpy
+import MVC.Model.Arpel as model
+import numba as nb
+from random import random
+
+arpl = model.ArPel('config.json')
+
+print(arpl.no_of_pels)
+
+print('here')
+print(arpl)
+for pel in arpl:
+    pel = complex(random(), random())
+
+print('-------------')
+print(arpl)
+print('done')
+
 # import sys, os
 # pathadd = os.path.dirname(__file__)
 # pathadd = '\\'.join(pathadd.split('\\')[:-1])+'\\MVC\\'

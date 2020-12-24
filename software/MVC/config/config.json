@@ -3,7 +3,7 @@
         "root_chord" : 6,
         "tip_chord" : 6,
         "sweep_angle" : 45,
-        "span" : 20,
+        "span" : 200,
         "set_back" : 2   
     },
     "pel_geometry" :{
