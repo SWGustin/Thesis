@@ -2,22 +2,34 @@ import os
 import numpy
 import MVC.Model.Arpel as model
 import numba as nb
+import numpy as np
 from random import random
+from numba import jit, njit, cuda
 
 arpl = model.ArPel('config.json')
 
-print(arpl.no_of_pels)
+setpoints = np.zeros((10,10,4))
 
-print('here')
-print(arpl)
-arpl[0,1] = 1
-print(arpl[0,1])
+@cuda.jit()
+def go_fast(a):
+    x,y,_ = a.shape
+    print(x,y)
+    for i in range(x):
+        for j in range(y):
+            a[i][j][0] = -1.1
 
+threadsperblock = 32
+blocks_per_grid = (arpl.size + (threadsperblock-1))//threadsperblock
 
-print('-------------')
-print(arpl)
-print('done')
+go_fast[blocks_per_grid, threadsperblock](setpoints)
 
+#go_fast(setpoints)
+#print(setpoints)
+
+# print('-------------')
+# print(arpl)
+# print('done')
+ 
 # import sys, os
 # pathadd = os.path.dirname(__file__)
 # pathadd = '\\'.join(pathadd.split('\\')[:-1])+'\\MVC\\'

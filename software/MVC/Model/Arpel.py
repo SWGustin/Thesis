@@ -49,14 +49,14 @@ class ArPel:
         tan_trailing_sweep = (self._root_chord - (tip_offset + _tip_chord))/self._span
 
         #create a numpy array init to 2
-        self._state_array = np.ones((self._no_of_rows, self._no_of_columns))*2
+        self._state_array = np.ones((self._no_of_rows, self._no_of_columns, _pel_cardinality + 1))*2
         self._no_of_pels = 0
 
         #set valid elemetns to 0.f
         for y in range(self._no_of_rows):
             row_y = getChord(y)
             for x in range(self._no_of_columns):
-                if getWidth(x) * tan_sweep < row_y and self._root_chord - getWidth(x) * tan_trailing_sweep > row_y:
+                if getWidth(x) * tan_sweep-self._set_back < row_y and self._root_chord - getWidth(x) * tan_trailing_sweep > row_y:
                     self._state_array[y,x] = 0.0
                     self._no_of_pels +=1
 
@@ -66,7 +66,9 @@ class ArPel:
 
     def __setitem__(self,indx, value):
         x,y = indx
-        self.state_array[y][x] = value
+        if self.state_array[y][x][0] != 2:
+            self.state_array[y][x][0] = value
+
             
     def __iter__(self):
         return self
@@ -94,12 +96,19 @@ class ArPel:
         print("Thrust vectors are as follows")
         for i in self._state_array:
             for j in i:
-                if j != 2 :
-                    print(j, end = ' ')
+                if j[0] != 2 :
+                    print(j[0], end = '\t')
                 else: 
-                    print('    ', end = '')
+                    print('\t', end = '')
             print()
         return ''
+
+    def update(self, thrust_array):
+        pass
+
+    @property
+    def size(self):
+        return self._no_of_pels
 
     @property
     def no_of_pels(self):
