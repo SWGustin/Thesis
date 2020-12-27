@@ -10,8 +10,9 @@ print(arpl.no_of_pels)
 
 print('here')
 print(arpl)
-for pel in arpl:
-    pel = complex(random(), random())
+arpl[0,1] = 1
+print(arpl[0,1])
+
 
 print('-------------')
 print(arpl)

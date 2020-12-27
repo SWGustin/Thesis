@@ -63,13 +63,21 @@ class ArPel:
     def __getitem__(self, indx):
         x,y = indx
         return self.state_array[y][x]
+
+    def __setitem__(self,indx, value):
+        x,y = indx
+        self.state_array[y][x] = value
             
     def __iter__(self):
         return self
 
     def __next__(self):
         try:
-            return next(self.itr)
+            nxt = next(self.itr)
+            if nxt != 2:
+                return nxt
+            else: 
+                raise StopIteration 
         except (StopIteration, TypeError):
             try:
                 self._current_row += 1
