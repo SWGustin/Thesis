@@ -5,6 +5,33 @@ import time
 #from .pel import PEL
 
 class ArPel:
+
+    conversion_matrices = dict()\
+
+    @classmethod
+    def calc_BVs(ArPel, no_switches, primary_dir):
+        _basis_angles = [((360/no_switches * i) + primary_dir)%360 for i in range(no_switches)]
+        return [(np.cos(np.radians(x)),np.sin(np.radians(x))) for x in _basis_angles]
+    
+    @classmethod
+    def calc_Conversion_matrix(ArPel, V1,V2):
+        bv = [[V1[0], V2[0]],[V1[1], V2[1]]]
+        return np.linalg.inv(bv)
+
+    @classmethod
+    def addConversionMatrix(ArPel, no_switches, primary_dir):
+        outer_key = (no_switches, primary_dir)
+        if outer_key in ArPel.conversion_matrices.keys():
+            return
+        inner_vals = []#this needs to be an array of conversion matrices
+        BVs = ArPel.calc_BVs(no_switches, primary_dir)
+        for i in range(no_switches):
+            v1= BVs[i]
+            v2 = BVs[((i+1)%no_switches)]
+            inner_vals.append(ArPel.calc_Conversion_matrix(v1,v2))
+        
+        ArPel.conversion_matrices[outer_key] = inner_vals
+
     def __init__(self, config_file_name):
         print('initializing ARPEL')
         config_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))  

@@ -1,27 +1,46 @@
 import os
-import numpy
 import MVC.Model.Arpel as model
 import numba as nb
 import numpy as np
+import math
 from random import random
-from numba import jit, njit, cuda
+from numba import jit, njit, cuda, vectorize
+from timeit import timeit
+from datetime import datetime
 
 arpl = model.ArPel('config.json')
 
 setpoints = np.zeros((10,10,4))
 
-@cuda.jit()
-def go_fast(a):
-    x,y,_ = a.shape
-    print(x,y)
-    for i in range(x):
-        for j in range(y):
-            a[i][j][0] = -1.1
 
-threadsperblock = 32
-blocks_per_grid = (arpl.size + (threadsperblock-1))//threadsperblock
 
-go_fast[blocks_per_grid, threadsperblock](setpoints)
+@vectorize(['int32(int32, int32)'], target = 'cuda')
+def add_ufunc(x,y):
+    return x+y
+
+
+sz = 100000000
+a = np.random.randint(1000,size = sz)
+b = np.random.randint(1000, size = sz)
+
+t1 = datetime.now()
+add_ufunc(a,b)
+t2 =datetime.now()
+print(f'done in {t2-t1} seconds or {format(1/(t2-t1).total_seconds()*sz, "10.2E")} per second')
+
+a_device = cuda.to_device(a)
+b_device = cuda.to_device(b)
+
+t1 = datetime.now()
+add_ufunc(a,b)
+t2 =datetime.now()
+print(f'done in {t2-t1} seconds or {format(1/(t2-t1).total_seconds()*sz, "10.2E")} per second')
+
+
+# threadsperblock = 32
+# blocks_per_grid = (arpl.size + (threadsperblock-1))//threadsperblock
+
+# go_fast[blocks_per_grid, threadsperblock](setpoints)
 
 #go_fast(setpoints)
 #print(setpoints)
